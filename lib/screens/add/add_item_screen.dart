@@ -75,25 +75,89 @@ class _AddItemScreenState extends State<AddItemScreen> {
     );
 
     if (date != null && mounted) {
-      final time = await showTimePicker(
+      // 시간 입력 다이얼로그 (타이핑 방식)
+      final hourController = TextEditingController(text: '14');
+      final minuteController = TextEditingController(text: '00');
+      
+      final result = await showDialog<Map<String, int>>(
         context: context,
-        initialTime: const TimeOfDay(hour: 14, minute: 0),
-        builder: (context, child) {
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-            child: child!,
-          );
-        },
+        builder: (context) => AlertDialog(
+          title: const Text('마감 시간 입력'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: hourController,
+                      decoration: const InputDecoration(
+                        labelText: '시',
+                        hintText: '14',
+                        suffixText: '시',
+                      ),
+                      keyboardType: TextInputType.number,
+                      maxLength: 2,
+                      autofocus: true,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: minuteController,
+                      decoration: const InputDecoration(
+                        labelText: '분',
+                        hintText: '00',
+                        suffixText: '분',
+                      ),
+                      keyboardType: TextInputType.number,
+                      maxLength: 2,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '24시간 형식으로 입력해주세요 (예: 14:30)',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () {
+                final hour = int.tryParse(hourController.text) ?? 14;
+                final minute = int.tryParse(minuteController.text) ?? 0;
+                
+                if (hour >= 0 && hour < 24 && minute >= 0 && minute < 60) {
+                  Navigator.pop(context, {'hour': hour, 'minute': minute});
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('올바른 시간을 입력해주세요')),
+                  );
+                }
+              },
+              child: const Text('확인'),
+            ),
+          ],
+        ),
       );
 
-      if (time != null) {
+      if (result != null) {
         setState(() {
           _deadline = DateTime(
             date.year,
             date.month,
             date.day,
-            time.hour,
-            time.minute,
+            result['hour']!,
+            result['minute']!,
           );
         });
       }

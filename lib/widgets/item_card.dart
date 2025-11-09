@@ -231,6 +231,20 @@ class ItemCard extends StatelessWidget {
                             ),
                           ),
 
+                        // 구매금액 표시
+                        if (item.purchasePrice != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '구매금액: ¥${NumberFormat('#,###').format(item.purchasePrice)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.blue.shade700,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+
                         // 합배송 그룹
                         if (item.shippingGroupId != null) ...[
                           const SizedBox(height: 4),
@@ -266,12 +280,51 @@ class ItemCard extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                  // 구매완료 버튼 (우측)
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () {
+                          itemProvider.togglePurchased(item.id);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: item.isPurchased 
+                              ? Colors.green.shade50 
+                              : Colors.transparent,
+                          foregroundColor: item.isPurchased 
+                              ? Colors.green.shade700 
+                              : Colors.grey.shade700,
+                          side: BorderSide(
+                            color: item.isPurchased 
+                                ? Colors.green.shade700 
+                                : Colors.grey.shade400,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          minimumSize: const Size(70, 36),
+                        ),
+                        child: Text(
+                          '구매완료',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: item.isPurchased 
+                                ? FontWeight.bold 
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
           ),
           
-          // 하단 버튼 (홈탭에서만 표시)
+          // 하단 버튼 3개: [구매금액 | 수정 | 삭제]
           if (showEditButtons)
             Container(
               decoration: BoxDecoration(
@@ -281,35 +334,6 @@ class ItemCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // 구매완료 버튼
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        itemProvider.togglePurchased(item.id);
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: item.isPurchased 
-                            ? Colors.green.shade50 
-                            : Colors.transparent,
-                        foregroundColor: item.isPurchased 
-                            ? Colors.green.shade700 
-                            : Colors.grey.shade700,
-                      ),
-                      child: Text(
-                        '구매완료',
-                        style: TextStyle(
-                          fontWeight: item.isPurchased 
-                              ? FontWeight.bold 
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 20,
-                    color: Colors.grey.shade300,
-                  ),
                   // 구매금액입력 버튼
                   Expanded(
                     child: TextButton.icon(

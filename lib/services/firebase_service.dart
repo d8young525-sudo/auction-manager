@@ -103,43 +103,52 @@ class FirebaseService {
 
   // 내 아이템 스트림
   static Stream<List<ItemModel>> getMyItemsStream(String userId) {
+    // 단순 쿼리 사용 (인덱스 불필요)
     return itemsCollection
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
+      final items = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return ItemModel.fromJson(data);
       }).toList();
+      
+      // 메모리에서 생성일 최신 순 정렬
+      items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      
+      return items;
     });
   }
 
   // 공개 아이템 스트림 (피드용)
   static Stream<List<ItemModel>> getPublicItemsStream(
       {String sortBy = 'latest'}) {
+    // 단순 쿼리 사용 (인덱스 불필요)
     Query query = itemsCollection
         .where('isPublic', isEqualTo: true)
-        .where('deadline', isGreaterThanOrEqualTo: DateTime.now().toIso8601String());
+        .limit(100);
 
-    if (sortBy == 'latest') {
-      query = query.orderBy('deadline', descending: false).orderBy('createdAt', descending: true);
-    } else {
-      // 인기순은 deadline만 정렬
-      query = query.orderBy('deadline', descending: false);
-    }
-
-    return query.limit(50).snapshots().map((snapshot) {
+    return query.snapshots().map((snapshot) {
       final items = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return ItemModel.fromJson(data);
       }).toList();
 
-      // 마감 지난 아이템 추가 필터링 (안전장치)
-      final validItems = items.where((item) => !item.isExpired).toList();
+      // 마감 지난 아이템 필터링 (메모리에서)
+      final validItems = items.where((item) => 
+        !item.isExpired && 
+        item.deadline.isAfter(DateTime.now())
+      ).toList();
 
-      // 인기순일 경우 메모리에서 정렬
-      if (sortBy == 'popular') {
+      // 메모리에서 정렬
+      if (sortBy == 'latest') {
+        validItems.sort((a, b) {
+          // 마감일 빠른 순 → 생성일 최신 순
+          final deadlineCompare = a.deadline.compareTo(b.deadline);
+          if (deadlineCompare != 0) return deadlineCompare;
+          return b.createdAt.compareTo(a.createdAt);
+        });
+      } else if (sortBy == 'popular') {
         validItems.sort((a, b) {
           final scoreA = a.likeCount + a.bookmarkCount;
           final scoreB = b.likeCount + b.bookmarkCount;
@@ -147,7 +156,8 @@ class FirebaseService {
         });
       }
 
-      return validItems;
+      // 최대 50개만 반환
+      return validItems.take(50).toList();
     });
   }
 

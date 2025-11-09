@@ -85,36 +85,20 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // 앱 아이콘
-                Container(
+                Image.asset(
+                  'assets/icons/app_icon.png',
                   width: 120,
                   height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                  ),
-                  child: Icon(
-                    Icons.gavel,
-                    size: 60,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
                 ),
                 const SizedBox(height: 32),
 
                 // 타이틀
                 Text(
-                  '옥션 큐레이터',
+                  '옥션매니저',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,
                       ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '일본 옥션 아이템을 스마트하게 관리하세요',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey,
-                      ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
 

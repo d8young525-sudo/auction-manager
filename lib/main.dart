@@ -72,13 +72,21 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     // Firebase Auth 상태 감지
     return StreamBuilder(
-      stream: FirebaseService.currentFirebaseUser != null
-          ? Stream.value(FirebaseService.currentFirebaseUser)
-          : Stream.value(null),
+      stream: FirebaseService.authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: Text('오류가 발생했습니다: ${snapshot.error}'),
+            ),
           );
         }
 

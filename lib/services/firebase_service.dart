@@ -24,6 +24,9 @@ class FirebaseService {
   // 현재 사용자
   static User? get currentFirebaseUser => _auth.currentUser;
   static String? get currentUserId => _auth.currentUser?.uid;
+  
+  // 인증 상태 변경 스트림
+  static Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   // ==================== 인증 관련 ====================
 

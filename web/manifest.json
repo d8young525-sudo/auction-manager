@@ -1,11 +1,11 @@
 {
-    "name": "auction_manager",
-    "short_name": "auction_manager",
+    "name": "옥션매니저",
+    "short_name": "옥션매니저",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "일본 옥션 아이템 관리 및 큐레이션 앱",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

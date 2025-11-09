@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "369850035035",
+    "project_id": "auction-manager-52959",
+    "storage_bucket": "auction-manager-52959.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:369850035035:android:b1f45c4ed80a121baec87e",
+        "android_client_info": {
+          "package_name": "com.auctionmanager.auction_manager"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDUvc9L8WUmaxjFybao37qbcXQZaX1oPw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

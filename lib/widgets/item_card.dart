@@ -67,22 +67,6 @@ class ItemCard extends StatelessWidget {
     );
   }
 
-  Future<void> _handleCardTap(BuildContext context) async {
-    if (item.isPurchased) {
-      await _showPriceDialog(context);
-    } else {
-      try {
-        await _launchUrl(item.url);
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('링크를 열 수 없습니다: $e')),
-          );
-        }
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final itemProvider = context.watch<ItemProvider>();
@@ -93,13 +77,37 @@ class ItemCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
-            onTap: () => _handleCardTap(context),
+            onTap: () async {
+              try {
+                await _launchUrl(item.url);
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('링크를 열 수 없습니다: $e')),
+                  );
+                }
+              }
+            },
             borderRadius: BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 즐겨찾기 (좌측)
+                  IconButton(
+                    icon: Icon(
+                      item.isFavorite ? Icons.star : Icons.star_border,
+                      color: item.isFavorite ? Colors.amber : Colors.grey,
+                    ),
+                    onPressed: () {
+                      itemProvider.toggleFavorite(item.id);
+                    },
+                    constraints: const BoxConstraints(),
+                    padding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(width: 8),
+
                   // 썸네일
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
@@ -258,46 +266,12 @@ class ItemCard extends StatelessWidget {
                       ],
                     ),
                   ),
-
-                  // 액션 버튼
-                  Column(
-                    children: [
-                      // 즐겨찾기
-                      IconButton(
-                        icon: Icon(
-                          item.isFavorite ? Icons.star : Icons.star_border,
-                          color: item.isFavorite ? Colors.amber : Colors.grey,
-                        ),
-                        onPressed: () {
-                          itemProvider.toggleFavorite(item.id);
-                        },
-                        constraints: const BoxConstraints(),
-                        padding: EdgeInsets.zero,
-                      ),
-                      const SizedBox(height: 4),
-
-                      // 구매완료
-                      IconButton(
-                        icon: Icon(
-                          item.isPurchased
-                              ? Icons.check_circle
-                              : Icons.check_circle_outline,
-                          color: item.isPurchased ? Colors.green : Colors.grey,
-                        ),
-                        onPressed: () {
-                          itemProvider.togglePurchased(item.id);
-                        },
-                        constraints: const BoxConstraints(),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
           ),
           
-          // 수정하기 | 삭제하기 버튼 (홈탭에서만 표시)
+          // 하단 버튼 (홈탭에서만 표시)
           if (showEditButtons)
             Container(
               decoration: BoxDecoration(
@@ -307,10 +281,63 @@ class ItemCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
+                  // 구매완료 버튼
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        itemProvider.togglePurchased(item.id);
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: item.isPurchased 
+                            ? Colors.green.shade50 
+                            : Colors.transparent,
+                        foregroundColor: item.isPurchased 
+                            ? Colors.green.shade700 
+                            : Colors.grey.shade700,
+                      ),
+                      child: Text(
+                        '구매완료',
+                        style: TextStyle(
+                          fontWeight: item.isPurchased 
+                              ? FontWeight.bold 
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 20,
+                    color: Colors.grey.shade300,
+                  ),
+                  // 구매금액입력 버튼
+                  Expanded(
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.attach_money, size: 16),
+                      label: Text(
+                        item.purchasePrice != null 
+                            ? '¥${NumberFormat('#,###').format(item.purchasePrice)}'
+                            : '구매금액',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      onPressed: () => _showPriceDialog(context),
+                      style: TextButton.styleFrom(
+                        foregroundColor: item.purchasePrice != null 
+                            ? Colors.blue.shade700 
+                            : Colors.grey.shade700,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 1,
+                    height: 20,
+                    color: Colors.grey.shade300,
+                  ),
+                  // 수정하기 버튼
                   Expanded(
                     child: TextButton.icon(
                       icon: const Icon(Icons.edit, size: 16),
-                      label: const Text('수정하기'),
+                      label: const Text('수정', style: TextStyle(fontSize: 13)),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -326,10 +353,11 @@ class ItemCard extends StatelessWidget {
                     height: 20,
                     color: Colors.grey.shade300,
                   ),
+                  // 삭제하기 버튼
                   Expanded(
                     child: TextButton.icon(
                       icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                      label: const Text('삭제하기', style: TextStyle(color: Colors.red)),
+                      label: const Text('삭제', style: TextStyle(color: Colors.red, fontSize: 13)),
                       onPressed: () async {
                         final confirmed = await showDialog<bool>(
                           context: context,

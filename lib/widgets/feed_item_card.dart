@@ -66,6 +66,7 @@ class _FeedItemCardState extends State<FeedItemCard> {
 
     if (currentUser == null || _isLoading) {
       return const Card(
+        margin: EdgeInsets.only(bottom: 12),
         child: Padding(
           padding: EdgeInsets.all(32.0),
           child: Center(child: CircularProgressIndicator()),
@@ -77,7 +78,7 @@ class _FeedItemCardState extends State<FeedItemCard> {
     final isPremium = _author?.isPremiumUser ?? false;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       // 열심 회원은 카드 테두리 강조
       shape: isPremium
           ? RoundedRectangleBorder(
@@ -91,69 +92,6 @@ class _FeedItemCardState extends State<FeedItemCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 작성자 정보
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: isPremium
-                      ? Colors.amber.shade700
-                      : Theme.of(context).colorScheme.primary,
-                  child: Text(
-                    _author?.nickname[0].toUpperCase() ?? 'U',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '@${_author?.nickname ?? 'Unknown'}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: isPremium ? Colors.amber.shade900 : null,
-                  ),
-                ),
-                if (isPremium) ...[
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.amber.shade700),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text(
-                          '⭐',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${_author?.nickname} 추천템',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.amber.shade900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          // 카드 콘텐츠 (클릭 가능)
           InkWell(
             onTap: () async {
               try {
@@ -166,122 +104,158 @@ class _FeedItemCardState extends State<FeedItemCard> {
                 }
               }
             },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 썸네일 이미지
-                if (widget.item.thumbnailUrl.isNotEmpty)
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: CachedNetworkImage(
-                      imageUrl: widget.item.thumbnailUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: Colors.grey.shade200,
-                        child: const Center(child: CircularProgressIndicator()),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: Colors.grey.shade200,
-                        child: const Icon(Icons.image_not_supported, size: 80),
-                      ),
-                    ),
-                  ),
-
-                // 정보
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 제목
-                      Text(
-                        widget.item.title,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-
-                      // 마감일
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            size: 14,
-                            color: widget.item.isDeadlineSoon
-                                ? Colors.red
-                                : Colors.grey.shade600,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 썸네일
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: widget.item.thumbnailUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: widget.item.thumbnailUrl,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              width: 80,
+                              height: 80,
+                              color: Colors.grey.shade200,
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              width: 80,
+                              height: 80,
+                              color: Colors.grey.shade200,
+                              child: const Icon(Icons.image_not_supported),
+                            ),
+                          )
+                        : Container(
+                            width: 80,
+                            height: 80,
+                            color: Colors.grey.shade200,
+                            child: const Icon(Icons.shopping_bag),
                           ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              '마감: ${DateFormat('yy.MM.dd HH:mm').format(widget.item.deadline)} (${widget.item.deadlineString})',
+                  ),
+                  const SizedBox(width: 12),
+
+                  // 정보
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 제목과 아이디
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.item.title,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              '(@${_author?.nickname ?? 'Unknown'})',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: widget.item.isDeadlineSoon
-                                    ? Colors.red
-                                    : Colors.grey.shade700,
-                                fontWeight: widget.item.isDeadlineSoon
-                                    ? FontWeight.bold
+                                color: isPremium 
+                                    ? Colors.amber.shade900 
+                                    : Colors.grey.shade600,
+                                fontWeight: isPremium 
+                                    ? FontWeight.bold 
                                     : FontWeight.normal,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
 
-                      // 사이즈
-                      if (widget.item.size != null && widget.item.size!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            '사이즈: ${widget.item.size}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade700,
+                        // 마감일
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              size: 14,
+                              color: widget.item.isDeadlineSoon
+                                  ? Colors.red
+                                  : Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                '마감: ${DateFormat('yy.MM.dd HH:mm').format(widget.item.deadline)} (${widget.item.deadlineString})',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: widget.item.isDeadlineSoon
+                                      ? Colors.red
+                                      : Colors.grey.shade700,
+                                  fontWeight: widget.item.isDeadlineSoon
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+
+                        // 사이즈
+                        if (widget.item.size != null && widget.item.size!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(
+                              '사이즈: ${widget.item.size}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
                             ),
                           ),
-                        ),
 
-                      // 메모
-                      if (widget.item.memo != null && widget.item.memo!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            '메모: ${widget.item.memo}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade700,
+                        // 메모
+                        if (widget.item.memo != null && widget.item.memo!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(
+                              '메모: ${widget.item.memo}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
 
-                      // 큐레이터 코멘트
-                      if (widget.item.curatorComment != null &&
-                          widget.item.curatorComment!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            '💬 ${widget.item.curatorComment}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.blue.shade700,
-                              fontStyle: FontStyle.italic,
+                        // 큐레이터 코멘트
+                        if (widget.item.curatorComment != null &&
+                            widget.item.curatorComment!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(
+                              '💬 ${widget.item.curatorComment}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.blue.shade700,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 

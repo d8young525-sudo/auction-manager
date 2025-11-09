@@ -227,7 +227,6 @@ class _ShippingScreenState extends State<ShippingScreen> {
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
-    final itemProvider = context.watch<ItemProvider>();
     final currentUser = userProvider.currentUser;
 
     if (currentUser == null) {
@@ -235,20 +234,6 @@ class _ShippingScreenState extends State<ShippingScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    final allGroups = itemProvider.getShippingGroups(currentUser.uid);
-    final activeGroups = allGroups.where((g) => !g.isCompleted).toList();
-    final completedGroups = allGroups.where((g) => g.isCompleted).toList();
-
-    final displayGroups = _showCompleted ? completedGroups : activeGroups;
-
-    // 구매완료 + 그룹 미지정 아이템
-    final allItems = itemProvider.getMyItems(currentUser.uid);
-    final ungroupedItems = allItems
-        .where((item) =>
-            item.isPurchased &&
-            (item.shippingGroupId == null || item.shippingGroupId!.isEmpty))
-        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -275,7 +260,34 @@ class _ShippingScreenState extends State<ShippingScreen> {
           ),
         ],
       ),
-      body: displayGroups.isEmpty && ungroupedItems.isEmpty
+      body: StreamBuilder<List<ShippingGroupModel>>(
+        stream: FirebaseService.getShippingGroupsStream(currentUser.uid),
+        builder: (context, groupSnapshot) {
+          if (groupSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final allGroups = groupSnapshot.data ?? [];
+          final activeGroups = allGroups.where((g) => !g.isCompleted).toList();
+          final completedGroups = allGroups.where((g) => g.isCompleted).toList();
+          final displayGroups = _showCompleted ? completedGroups : activeGroups;
+
+          return StreamBuilder<List<ItemModel>>(
+            stream: FirebaseService.getMyItemsStream(currentUser.uid),
+            builder: (context, itemSnapshot) {
+              if (itemSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final allItems = itemSnapshot.data ?? [];
+              final ungroupedItems = allItems
+                  .where((item) =>
+                      item.isPurchased &&
+                      (item.shippingGroupId == null ||
+                          item.shippingGroupId!.isEmpty))
+                  .toList();
+
+              return displayGroups.isEmpty && ungroupedItems.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -321,7 +333,11 @@ class _ShippingScreenState extends State<ShippingScreen> {
                   ...ungroupedItems.map((item) => _buildUngroupedItemCard(item)),
                 ],
               ],
-            ),
+            );
+            },
+          );
+        },
+      ),
       floatingActionButton: _showCompleted
           ? null
           : FloatingActionButton(

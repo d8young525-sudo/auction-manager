@@ -146,47 +146,62 @@ class ItemCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
 
-                        // 사이즈
-                        if (item.size != null && item.size!.isNotEmpty)
+                        // 사이즈, 메모, 추천문구 한 줄에 배치
+                        if ((item.size != null && item.size!.isNotEmpty) ||
+                            (item.memo != null && item.memo!.isNotEmpty) ||
+                            (item.curatorComment != null && item.curatorComment!.isNotEmpty))
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              '사이즈: ${item.size}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                          ),
-
-                        // 메모
-                        if (item.memo != null && item.memo!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              '메모: ${item.memo}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade700,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-
-                        // 코멘트
-                        if (item.curatorComment != null && item.curatorComment!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              '💬 ${item.curatorComment}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.blue.shade700,
-                                fontStyle: FontStyle.italic,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            padding: const EdgeInsets.only(bottom: 4, top: 4),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 사이즈, 메모 (왼쪽)
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (item.size != null && item.size!.isNotEmpty)
+                                        Text(
+                                          '사이즈: ${item.size}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                        ),
+                                      if (item.memo != null && item.memo!.isNotEmpty)
+                                        Text(
+                                          '메모: ${item.memo}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                // 추천문구 (우측, 큰 폰트)
+                                if (item.curatorComment != null && item.curatorComment!.isNotEmpty) ...[
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Text(
+                                      '💬 ${item.curatorComment}',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.blue.shade700,
+                                        fontWeight: FontWeight.w600,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
 

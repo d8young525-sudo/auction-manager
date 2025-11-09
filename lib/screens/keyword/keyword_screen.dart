@@ -241,7 +241,7 @@ class _KeywordScreenState extends State<KeywordScreen> {
                           Icon(Icons.info, color: Colors.blue.shade700),
                           const SizedBox(width: 8),
                           Text(
-                            '키워드 알림',
+                            '키워드 관리',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.blue.shade900,
@@ -252,7 +252,7 @@ class _KeywordScreenState extends State<KeywordScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '등록한 키워드와 관련된 새 공개 아이템이 탐색 피드에 등록되면 알림을 받을 수 있습니다.',
+                        '옥션 검색에 사용할 키워드를 저장하고 관리하세요. 복사 버튼으로 쉽게 붙여넣을 수 있습니다.',
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.blue.shade900,
@@ -296,15 +296,28 @@ class _KeywordScreenState extends State<KeywordScreen> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // 알림 토글
-                          Switch(
-                            value: keyword.notificationEnabled,
-                            onChanged: (value) => _toggleNotification(keyword),
-                            activeTrackColor: Colors.blue,
+                          // 복사 버튼
+                          IconButton(
+                            icon: const Icon(Icons.copy, color: Colors.blue),
+                            tooltip: '복사',
+                            onPressed: () async {
+                              await Clipboard.setData(
+                                ClipboardData(text: keyword.keyword),
+                              );
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('\'${keyword.keyword}\' 복사되었습니다'),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              }
+                            },
                           ),
                           // 삭제 버튼
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
+                            tooltip: '삭제',
                             onPressed: () async {
                               final confirmed = await showDialog<bool>(
                                 context: context,

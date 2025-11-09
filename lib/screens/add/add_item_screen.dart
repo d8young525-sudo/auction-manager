@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -178,6 +179,63 @@ class _AddItemScreenState extends State<AddItemScreen> {
     );
   }
 
+  Future<void> _createNewShippingGroup() async {
+    final nameController = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('새 합배송 그룹 만들기'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('같은 시기에 구매한 상품들을 묶어서\n합배송으로 배송비를 절약하세요!'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: '그룹 이름',
+                hintText: '예: 2024년 1월 구매',
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (nameController.text.isNotEmpty) {
+                Navigator.pop(context, nameController.text);
+              }
+            },
+            child: const Text('만들기'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      final userProvider = context.read<UserProvider>();
+      final itemProvider = context.read<ItemProvider>();
+      final currentUser = userProvider.currentUser;
+
+      if (currentUser != null) {
+        final newGroupId = await itemProvider.createShippingGroup(
+          currentUser.uid,
+          result,
+        );
+        setState(() {
+          _selectedShippingGroup = newGroupId;
+        });
+        _showSnackBar('합배송 그룹이 생성되었습니다');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
@@ -211,7 +269,36 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
+              
+              // 웹 브라우저 제한 안내
+              if (kIsWeb) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '웹 브라우저에서는 링크 자동 불러오기가 제한됩니다.\nAndroid 앱에서는 정상 작동합니다.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange.shade900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              
               Row(
                 children: [
                   Expanded(
@@ -368,26 +455,75 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                DropdownButtonFormField<String>(
-                  value: _selectedShippingGroup,
-                  decoration: const InputDecoration(
-                    labelText: '합배송 그룹',
-                  ),
-                  items: [
-                    const DropdownMenuItem(
-                      value: null,
-                      child: Text('그룹 없음'),
+                // 합배송 그룹 섹션
+                Card(
+                  color: Colors.blue.shade50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.local_shipping, color: Colors.blue.shade700, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              '합배송 그룹',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade900,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '같은 시기에 구매한 상품들을 묶어서 배송비를 절약하세요!',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedShippingGroup,
+                                decoration: const InputDecoration(
+                                  labelText: '그룹 선택',
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                ),
+                                items: [
+                                  const DropdownMenuItem(
+                                    value: null,
+                                    child: Text('그룹 없음 (개별 배송)'),
+                                  ),
+                                  ...shippingGroups.map((group) {
+                                    return DropdownMenuItem(
+                                      value: group.id,
+                                      child: Text('${group.name} (${group.itemCount}개 아이템)'),
+                                    );
+                                  }),
+                                ],
+                                onChanged: (value) {
+                                  setState(() => _selectedShippingGroup = value);
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline),
+                              color: Colors.blue.shade700,
+                              tooltip: '새 그룹 만들기',
+                              onPressed: () => _createNewShippingGroup(),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    ...shippingGroups.map((group) {
-                      return DropdownMenuItem(
-                        value: group.id,
-                        child: Text(group.name),
-                      );
-                    }),
-                  ],
-                  onChanged: (value) {
-                    setState(() => _selectedShippingGroup = value);
-                  },
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],

@@ -24,48 +24,7 @@ class ItemCard extends StatelessWidget {
     }
   }
 
-  Future<void> _showPriceDialog(BuildContext context) async {
-    final controller = TextEditingController(
-      text: item.purchasePrice?.toString() ?? '',
-    );
 
-    return showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('구매가격 입력'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: '가격 (엔)',
-            prefixText: '¥',
-          ),
-          keyboardType: TextInputType.number,
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final price = int.tryParse(controller.text.replaceAll(',', ''));
-              if (price != null) {
-                await context.read<ItemProvider>().updateItemPrice(item.id, price);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('가격이 저장되었습니다')),
-                  );
-                }
-              }
-            },
-            child: const Text('저장'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -324,7 +283,7 @@ class ItemCard extends StatelessWidget {
             ),
           ),
           
-          // 하단 버튼 3개: [구매금액 | 수정 | 삭제]
+          // 하단 버튼 2개: [수정 | 삭제]
           if (showEditButtons)
             Container(
               decoration: BoxDecoration(
@@ -334,29 +293,6 @@ class ItemCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  // 구매금액입력 버튼
-                  Expanded(
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.attach_money, size: 16),
-                      label: Text(
-                        item.purchasePrice != null 
-                            ? '¥${NumberFormat('#,###').format(item.purchasePrice)}'
-                            : '구매금액',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      onPressed: () => _showPriceDialog(context),
-                      style: TextButton.styleFrom(
-                        foregroundColor: item.purchasePrice != null 
-                            ? Colors.blue.shade700 
-                            : Colors.grey.shade700,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 20,
-                    color: Colors.grey.shade300,
-                  ),
                   // 수정하기 버튼
                   Expanded(
                     child: TextButton.icon(

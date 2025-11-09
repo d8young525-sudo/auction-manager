@@ -103,25 +103,6 @@ class ProfileScreen extends StatelessWidget {
             _buildMonthlySpendingCard(context, myItems),
             const SizedBox(height: 16),
 
-            // 합배송 관리
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.local_shipping),
-                    title: const Text('합배송 그룹 관리'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // TODO: 합배송 그룹 관리 화면
-                      _showShippingGroupsDialog(
-                          context, shippingGroups, itemProvider);
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
             // 관리자 메뉴 (관리자만 표시)
             if (currentUser.isAdmin) ...[
               Card(
@@ -359,56 +340,6 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  void _showShippingGroupsDialog(
-    BuildContext context,
-    List<dynamic> groups,
-    ItemProvider itemProvider,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('합배송 그룹'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: groups.isEmpty
-              ? const Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(
-                    child: Text('합배송 그룹이 없습니다'),
-                  ),
-                )
-              : ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: groups.length,
-                  itemBuilder: (context, index) {
-                    final group = groups[index];
-                    return ListTile(
-                      title: Text(group.name),
-                      subtitle:
-                          Text('${group.itemCount}개 아이템 / ¥${group.totalPrice}'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () async {
-                          await itemProvider.deleteShippingGroup(group.id);
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-        ],
-      ),
     );
   }
 }

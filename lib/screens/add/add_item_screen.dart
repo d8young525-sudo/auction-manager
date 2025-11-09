@@ -215,27 +215,13 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
       if (mounted) {
         _showSnackBar('아이템이 추가되었습니다');
-        _resetForm();
+        // 홈 탭으로 복귀 (MainTabScreen의 첫 번째 탭)
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     }
   }
 
-  void _resetForm() {
-    _urlController.clear();
-    _titleController.clear();
-    _sizeController.clear();
-    _memoController.clear();
-    _priceController.clear();
-    _commentController.clear();
-    setState(() {
-      _thumbnailUrl = '';
-      _deadline = null;
-      _isPurchased = false;
-      _isPublic = false;
-      _selectedShippingGroup = null;
-      _tags.clear();
-    });
-  }
+
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(

@@ -142,13 +142,13 @@ class FirebaseService {
 
       // 메모리에서 정렬
       if (sortBy == 'latest') {
-        validItems.sort((a, b) {
-          // 마감일 빠른 순 → 생성일 최신 순
-          final deadlineCompare = a.deadline.compareTo(b.deadline);
-          if (deadlineCompare != 0) return deadlineCompare;
-          return b.createdAt.compareTo(a.createdAt);
-        });
+        // 생성일 최신 순
+        validItems.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      } else if (sortBy == 'deadline') {
+        // 마감일 빠른 순
+        validItems.sort((a, b) => a.deadline.compareTo(b.deadline));
       } else if (sortBy == 'popular') {
+        // 인기순 (좋아요 + 북마크)
         validItems.sort((a, b) {
           final scoreA = a.likeCount + a.bookmarkCount;
           final scoreB = b.likeCount + b.bookmarkCount;
@@ -200,6 +200,14 @@ class FirebaseService {
         'updatedAt': DateTime.now().toIso8601String(),
       });
     }
+  }
+
+  // 아이템 가격 업데이트
+  static Future<void> updateItemPrice(String itemId, int price) async {
+    await itemsCollection.doc(itemId).update({
+      'purchasePrice': price,
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
   }
 
   // ==================== 좋아요/북마크 관련 ====================

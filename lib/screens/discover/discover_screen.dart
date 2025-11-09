@@ -30,6 +30,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 child: Text('최신순'),
               ),
               const PopupMenuItem(
+                value: 'deadline',
+                child: Text('마감일자'),
+              ),
+              const PopupMenuItem(
                 value: 'popular',
                 child: Text('인기순'),
               ),

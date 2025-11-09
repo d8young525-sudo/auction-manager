@@ -87,6 +87,12 @@ class ItemProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // 아이템 가격 업데이트
+  Future<void> updateItemPrice(String itemId, int price) async {
+    await FirebaseService.updateItemPrice(itemId, price);
+    notifyListeners();
+  }
+
   // 좋아요 토글
   Future<void> toggleLike(String userId, String itemId) async {
     await FirebaseService.toggleLike(userId, itemId);

@@ -77,13 +77,13 @@ class ItemProvider with ChangeNotifier {
 
   // 즐겨찾기 토글
   Future<void> toggleFavorite(String itemId) async {
-    // Firestore에서 직접 처리
+    await FirebaseService.toggleFavorite(itemId);
     notifyListeners();
   }
 
   // 구매완료 토글
   Future<void> togglePurchased(String itemId) async {
-    // Firestore에서 직접 처리
+    await FirebaseService.togglePurchased(itemId);
     notifyListeners();
   }
 

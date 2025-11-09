@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/item_provider.dart';
+import '../../models/item_model.dart';
+import '../../services/firebase_service.dart';
 import '../../widgets/feed_item_card.dart';
 
 class DiscoverScreen extends StatefulWidget {
@@ -15,9 +15,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final itemProvider = context.watch<ItemProvider>();
-    final items = itemProvider.getPublicItems(sortBy: _sortBy);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('발견'),
@@ -40,8 +37,30 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           ),
         ],
       ),
-      body: items.isEmpty
-          ? Center(
+      body: StreamBuilder<List<ItemModel>>(
+        stream: FirebaseService.getPublicItemsStream(sortBy: _sortBy),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 80, color: Colors.red),
+                  const SizedBox(height: 16),
+                  Text('오류가 발생했습니다: ${snapshot.error}'),
+                ],
+              ),
+            );
+          }
+
+          final items = snapshot.data ?? [];
+
+          if (items.isEmpty) {
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -69,14 +88,18 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   ),
                 ],
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                return FeedItemCard(item: items[index]);
-              },
-            ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              return FeedItemCard(item: items[index]);
+            },
+          );
+        },
+      ),
     );
   }
 }

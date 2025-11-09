@@ -176,6 +176,32 @@ class FirebaseService {
     await itemsCollection.doc(itemId).delete();
   }
 
+  // 즐겨찾기 토글
+  static Future<void> toggleFavorite(String itemId) async {
+    final itemDoc = await itemsCollection.doc(itemId).get();
+    if (itemDoc.exists) {
+      final data = itemDoc.data() as Map<String, dynamic>;
+      final currentFavorite = data['isFavorite'] ?? false;
+      await itemsCollection.doc(itemId).update({
+        'isFavorite': !currentFavorite,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  // 구매완료 토글
+  static Future<void> togglePurchased(String itemId) async {
+    final itemDoc = await itemsCollection.doc(itemId).get();
+    if (itemDoc.exists) {
+      final data = itemDoc.data() as Map<String, dynamic>;
+      final currentPurchased = data['isPurchased'] ?? false;
+      await itemsCollection.doc(itemId).update({
+        'isPurchased': !currentPurchased,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
   // ==================== 좋아요/북마크 관련 ====================
 
   // 좋아요 토글

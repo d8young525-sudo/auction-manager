@@ -69,15 +69,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
   Future<void> _selectDate() async {
     final date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().add(const Duration(days: 7)),
+      initialDate: DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
 
     if (date != null && mounted) {
       // 시간 입력 다이얼로그 (타이핑 방식)
-      final hourController = TextEditingController(text: '14');
-      final minuteController = TextEditingController(text: '00');
+      final hourController = TextEditingController();
+      final minuteController = TextEditingController();
       
       final result = await showDialog<Map<String, int>>(
         context: context,

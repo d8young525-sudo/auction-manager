@@ -284,13 +284,17 @@ class FirebaseService {
       String userId) {
     return shippingGroupsCollection
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
+      final groups = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return ShippingGroupModel.fromJson(data);
       }).toList();
+      
+      // 메모리에서 정렬 (인덱스 불필요)
+      groups.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      
+      return groups;
     });
   }
 
@@ -343,13 +347,17 @@ class FirebaseService {
   static Stream<List<KeywordModel>> getKeywordsStream(String userId) {
     return keywordsCollection
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
+      final keywords = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return KeywordModel.fromJson(data);
       }).toList();
+      
+      // 메모리에서 정렬 (인덱스 불필요)
+      keywords.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      
+      return keywords;
     });
   }
 

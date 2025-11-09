@@ -55,17 +55,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
           final allItems = snapshot.data ?? [];
           
-          // 구매완료 아이템 제외 (배송 탭으로 이동)
-          final activeItems = allItems.where((item) => !item.isPurchased).toList();
-          
-          // 필터 적용
-          List<ItemModel> filteredItems = activeItems;
+          // 필터 적용 (구매완료 아이템도 포함)
+          List<ItemModel> filteredItems = allItems;
           switch (itemProvider.currentFilter) {
             case ItemFilter.favorite:
-              filteredItems = activeItems.where((item) => item.isFavorite).toList();
+              filteredItems = allItems.where((item) => item.isFavorite).toList();
               break;
             case ItemFilter.createdDesc:
-              filteredItems = activeItems;
+              filteredItems = allItems;
               // 등록일순 정렬
               filteredItems.sort((a, b) => b.createdAt.compareTo(a.createdAt));
               break;

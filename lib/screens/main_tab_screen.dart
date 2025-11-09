@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'home/home_screen.dart';
 import 'discover/discover_screen.dart';
+import 'shipping/shipping_screen.dart';
+import 'keyword/keyword_screen.dart';
 import 'profile/profile_screen.dart';
 
 class MainTabScreen extends StatefulWidget {
@@ -15,7 +17,9 @@ class _MainTabScreenState extends State<MainTabScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),        // 홈 (+ FAB 버튼 포함)
-    const DiscoverScreen(),    // 발견
+    const DiscoverScreen(),    // 탐색
+    const ShippingScreen(),    // 배송
+    const KeywordScreen(),     // 키워드
     const ProfileScreen(),     // 프로필
   ];
 
@@ -39,7 +43,17 @@ class _MainTabScreenState extends State<MainTabScreen> {
           NavigationDestination(
             icon: Icon(Icons.explore_outlined),
             selectedIcon: Icon(Icons.explore),
-            label: '발견',
+            label: '탐색',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.local_shipping_outlined),
+            selectedIcon: Icon(Icons.local_shipping),
+            label: '배송',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.key_outlined),
+            selectedIcon: Icon(Icons.key),
+            label: '키워드',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

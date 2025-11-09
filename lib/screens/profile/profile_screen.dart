@@ -97,7 +97,11 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+
+            // 월별 지출 통계
+            _buildMonthlySpendingCard(context, myItems),
+            const SizedBox(height: 16),
 
             // 합배송 관리
             Card(
@@ -217,6 +221,141 @@ class ProfileScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             color: Colors.grey.shade600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 월별 지출 통계 카드
+  Widget _buildMonthlySpendingCard(BuildContext context, List<dynamic> items) {
+    // 구매 완료된 아이템만 필터링
+    final purchasedItems = items.where((item) => item.isPurchased).toList();
+
+    // 현재 월 계산
+    final now = DateTime.now();
+    final currentMonth = DateTime(now.year, now.month);
+    final lastMonth = DateTime(now.year, now.month - 1);
+    final twoMonthsAgo = DateTime(now.year, now.month - 2);
+
+    // 월별 지출 계산
+    int currentMonthSpending = 0;
+    int lastMonthSpending = 0;
+    int twoMonthsAgoSpending = 0;
+
+    for (final item in purchasedItems) {
+      final price = (item.purchasePrice ?? 0) as int;
+      final createdDate = DateTime(
+        item.createdAt.year,
+        item.createdAt.month,
+      );
+
+      if (createdDate == currentMonth) {
+        currentMonthSpending += price;
+      } else if (createdDate == lastMonth) {
+        lastMonthSpending += price;
+      } else if (createdDate == twoMonthsAgo) {
+        twoMonthsAgoSpending += price;
+      }
+    }
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.trending_up,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '월별 지출 통계',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildMonthlySpendingRow(
+              context,
+              '${now.month}월 (이번 달)',
+              currentMonthSpending,
+              isCurrentMonth: true,
+            ),
+            const Divider(height: 24),
+            _buildMonthlySpendingRow(
+              context,
+              '${lastMonth.month}월',
+              lastMonthSpending,
+            ),
+            const Divider(height: 24),
+            _buildMonthlySpendingRow(
+              context,
+              '${twoMonthsAgo.month}월',
+              twoMonthsAgoSpending,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '3개월 총 지출',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade900,
+                    ),
+                  ),
+                  Text(
+                    '¥${currentMonthSpending + lastMonthSpending + twoMonthsAgoSpending}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMonthlySpendingRow(
+    BuildContext context,
+    String month,
+    int amount, {
+    bool isCurrentMonth = false,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          month,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isCurrentMonth ? FontWeight.bold : FontWeight.normal,
+            color: isCurrentMonth ? Theme.of(context).colorScheme.primary : null,
+          ),
+        ),
+        Text(
+          '¥$amount',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isCurrentMonth ? Theme.of(context).colorScheme.primary : null,
           ),
         ),
       ],

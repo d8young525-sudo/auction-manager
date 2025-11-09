@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/user_model.dart';
 import '../models/item_model.dart';
 import '../models/shipping_group_model.dart';
+import '../models/keyword_model.dart';
 
 class FirebaseService {
   // Firebase 인스턴스
@@ -20,6 +21,8 @@ class FirebaseService {
       _firestore.collection('likes');
   static CollectionReference get bookmarksCollection =>
       _firestore.collection('bookmarks');
+  static CollectionReference get keywordsCollection =>
+      _firestore.collection('keywords');
 
   // 현재 사용자
   static User? get currentFirebaseUser => _auth.currentUser;
@@ -332,5 +335,36 @@ class FirebaseService {
     await usersCollection.doc(uid).update({
       'isAdmin': isAdmin,
     });
+  }
+
+  // ==================== 키워드 관련 ====================
+
+  // 키워드 스트림
+  static Stream<List<KeywordModel>> getKeywordsStream(String userId) {
+    return keywordsCollection
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return KeywordModel.fromJson(data);
+      }).toList();
+    });
+  }
+
+  // 키워드 추가
+  static Future<void> addKeyword(KeywordModel keyword) async {
+    await keywordsCollection.doc(keyword.id).set(keyword.toJson());
+  }
+
+  // 키워드 업데이트
+  static Future<void> updateKeyword(KeywordModel keyword) async {
+    await keywordsCollection.doc(keyword.id).update(keyword.toJson());
+  }
+
+  // 키워드 삭제
+  static Future<void> deleteKeyword(String keywordId) async {
+    await keywordsCollection.doc(keywordId).delete();
   }
 }

@@ -5,7 +5,7 @@ import '../services/firebase_service.dart';
 import '../services/notification_service.dart';
 import 'package:uuid/uuid.dart';
 
-enum ItemFilter { all, favorite, purchased, shipping }
+enum ItemFilter { all, favorite, createdDesc }
 
 enum ItemSort { deadlineAsc, createdDesc, priceAsc }
 

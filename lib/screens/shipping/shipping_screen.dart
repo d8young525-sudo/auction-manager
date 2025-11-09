@@ -289,20 +289,13 @@ class _ShippingScreenState extends State<ShippingScreen> {
                   Text(
                     _showCompleted
                         ? '배송완료된 그룹이 없습니다'
-                        : '배송 그룹을 만들어보세요',
+                        : '배송 그룹을 만들어보세요\n우측 하단 + 버튼을 눌러주세요',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey.shade600,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  if (!_showCompleted) ...[
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: _createGroup,
-                      icon: const Icon(Icons.add),
-                      label: const Text('새 그룹 만들기'),
-                    ),
-                  ],
                 ],
               ),
             )

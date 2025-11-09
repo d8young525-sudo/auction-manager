@@ -39,29 +39,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('내 구매 목록'),
-        actions: [
-          // 정렬 메뉴
-          PopupMenuButton<ItemSort>(
-            icon: const Icon(Icons.sort),
-            onSelected: (sort) {
-              itemProvider.setSort(sort);
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: ItemSort.deadlineAsc,
-                child: Text('마감일 임박순'),
-              ),
-              const PopupMenuItem(
-                value: ItemSort.createdDesc,
-                child: Text('등록일순'),
-              ),
-              const PopupMenuItem(
-                value: ItemSort.priceAsc,
-                child: Text('가격순'),
-              ),
-            ],
-          ),
-        ],
       ),
       body: StreamBuilder<List<ItemModel>>(
         stream: FirebaseService.getMyItemsStream(currentUser.uid),
@@ -78,41 +55,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
           final allItems = snapshot.data ?? [];
           
+          // 구매완료 아이템 제외 (배송 탭으로 이동)
+          final activeItems = allItems.where((item) => !item.isPurchased).toList();
+          
           // 필터 적용
-          List<ItemModel> filteredItems = allItems;
+          List<ItemModel> filteredItems = activeItems;
           switch (itemProvider.currentFilter) {
             case ItemFilter.favorite:
-              filteredItems = allItems.where((item) => item.isFavorite).toList();
+              filteredItems = activeItems.where((item) => item.isFavorite).toList();
               break;
-            case ItemFilter.purchased:
-              filteredItems = allItems.where((item) => item.isPurchased).toList();
-              break;
-            case ItemFilter.shipping:
-              filteredItems = allItems.where((item) => item.shippingGroupId != null).toList();
-              break;
-            case ItemFilter.all:
-              break;
-          }
-
-          // 정렬 적용
-          switch (itemProvider.currentSort) {
-            case ItemSort.deadlineAsc:
-              filteredItems.sort((a, b) => a.deadline.compareTo(b.deadline));
-              break;
-            case ItemSort.createdDesc:
+            case ItemFilter.createdDesc:
+              filteredItems = activeItems;
+              // 등록일순 정렬
               filteredItems.sort((a, b) => b.createdAt.compareTo(a.createdAt));
               break;
-            case ItemSort.priceAsc:
-              filteredItems.sort((a, b) {
-                final priceA = a.purchasePrice ?? 0;
-                final priceB = b.purchasePrice ?? 0;
-                return priceA.compareTo(priceB);
-              });
+            case ItemFilter.all:
+              // 기본: 마감일순 정렬
+              filteredItems.sort((a, b) => a.deadline.compareTo(b.deadline));
               break;
+            default:
+              break;
+          }
+          
+          // all 필터인 경우에만 마감일순 정렬 (기본)
+          if (itemProvider.currentFilter == ItemFilter.all) {
+            filteredItems.sort((a, b) => a.deadline.compareTo(b.deadline));
           }
 
           final urgentItems = filteredItems
-              .where((item) => item.isDeadlineSoon && !item.isPurchased)
+              .where((item) => item.isDeadlineSoon)
               .toList();
 
           return Column(
@@ -145,37 +116,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-              // 필터 칩
+              // 필터 탭 (간소화: 전체 | 즐겨찾기 | 등록일순)
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
-                    FilterChip(
+                    ChoiceChip(
                       label: const Text('전체'),
                       selected: itemProvider.currentFilter == ItemFilter.all,
                       onSelected: (_) => itemProvider.setFilter(ItemFilter.all),
                     ),
                     const SizedBox(width: 8),
-                    FilterChip(
+                    ChoiceChip(
                       label: const Text('즐겨찾기'),
                       selected: itemProvider.currentFilter == ItemFilter.favorite,
-                      onSelected: (_) =>
-                          itemProvider.setFilter(ItemFilter.favorite),
+                      onSelected: (_) => itemProvider.setFilter(ItemFilter.favorite),
                     ),
                     const SizedBox(width: 8),
-                    FilterChip(
-                      label: const Text('구매완료'),
-                      selected: itemProvider.currentFilter == ItemFilter.purchased,
-                      onSelected: (_) =>
-                          itemProvider.setFilter(ItemFilter.purchased),
-                    ),
-                    const SizedBox(width: 8),
-                    FilterChip(
-                      label: const Text('합배송'),
-                      selected: itemProvider.currentFilter == ItemFilter.shipping,
-                      onSelected: (_) =>
-                          itemProvider.setFilter(ItemFilter.shipping),
+                    ChoiceChip(
+                      label: const Text('등록일순'),
+                      selected: itemProvider.currentFilter == ItemFilter.createdDesc,
+                      onSelected: (_) => itemProvider.setFilter(ItemFilter.createdDesc),
                     ),
                   ],
                 ),

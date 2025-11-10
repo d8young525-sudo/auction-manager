@@ -13,7 +13,7 @@ class ItemModel {
   String? shippingGroupId;
   bool isPublic;
   List<String> tags;
-  String? curatorComment;
+  bool instantPurchase; // 즉시결제 가능 여부
   int likeCount;
   int bookmarkCount;
   DateTime createdAt;
@@ -34,7 +34,7 @@ class ItemModel {
     this.shippingGroupId,
     this.isPublic = false,
     this.tags = const [],
-    this.curatorComment,
+    this.instantPurchase = false,
     this.likeCount = 0,
     this.bookmarkCount = 0,
     required this.createdAt,
@@ -83,7 +83,7 @@ class ItemModel {
       'shippingGroupId': shippingGroupId,
       'isPublic': isPublic,
       'tags': tags,
-      'curatorComment': curatorComment,
+      'instantPurchase': instantPurchase,
       'likeCount': likeCount,
       'bookmarkCount': bookmarkCount,
       'createdAt': createdAt.toIso8601String(),
@@ -107,7 +107,7 @@ class ItemModel {
       shippingGroupId: json['shippingGroupId'] as String?,
       isPublic: json['isPublic'] as bool? ?? false,
       tags: (json['tags'] as List<dynamic>?)?.cast<String>() ?? [],
-      curatorComment: json['curatorComment'] as String?,
+      instantPurchase: json['instantPurchase'] as bool? ?? false,
       likeCount: json['likeCount'] as int? ?? 0,
       bookmarkCount: json['bookmarkCount'] as int? ?? 0,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -130,7 +130,7 @@ class ItemModel {
     String? shippingGroupId,
     bool? isPublic,
     List<String>? tags,
-    String? curatorComment,
+    bool? instantPurchase,
     int? likeCount,
     int? bookmarkCount,
     DateTime? createdAt,
@@ -151,7 +151,7 @@ class ItemModel {
       shippingGroupId: shippingGroupId ?? this.shippingGroupId,
       isPublic: isPublic ?? this.isPublic,
       tags: tags ?? this.tags,
-      curatorComment: curatorComment ?? this.curatorComment,
+      instantPurchase: instantPurchase ?? this.instantPurchase,
       likeCount: likeCount ?? this.likeCount,
       bookmarkCount: bookmarkCount ?? this.bookmarkCount,
       createdAt: createdAt ?? this.createdAt,

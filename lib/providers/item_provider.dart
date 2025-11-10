@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/item_model.dart';
 import '../models/shipping_group_model.dart';
 import '../services/firebase_service.dart';
@@ -45,12 +46,6 @@ class ItemProvider with ChangeNotifier {
   // 아이템 추가
   Future<void> addItem(ItemModel item) async {
     await FirebaseService.addItem(item);
-
-    // 알림 예약
-    if (!item.isPurchased && !item.isExpired) {
-      await NotificationService.scheduleItemDeadlineNotifications(item);
-    }
-
     notifyListeners();
   }
 
@@ -58,26 +53,67 @@ class ItemProvider with ChangeNotifier {
   Future<void> updateItem(ItemModel item) async {
     final updatedItem = item.copyWith(updatedAt: DateTime.now());
     await FirebaseService.updateItem(updatedItem);
-
-    // 알림 재예약
-    await NotificationService.cancelItemNotifications(updatedItem.id);
-    if (!updatedItem.isPurchased && !updatedItem.isExpired) {
-      await NotificationService.scheduleItemDeadlineNotifications(updatedItem);
-    }
-
     notifyListeners();
   }
 
   // 아이템 삭제
   Future<void> deleteItem(String itemId) async {
     await FirebaseService.deleteItem(itemId);
-    await NotificationService.cancelItemNotifications(itemId);
+    // 알림 취소
+    await NotificationService.cancelNotificationsForItem(itemId);
     notifyListeners();
   }
 
   // 즐겨찾기 토글
   Future<void> toggleFavorite(String itemId) async {
+    // 현재 아이템 정보 가져오기
+    final item = await FirebaseService.getItem(itemId);
+    if (item == null) return;
+    
+    // 즐겨찾기 상태 토글
     await FirebaseService.toggleFavorite(itemId);
+    final newFavoriteState = !item.isFavorite;
+    
+    // 알림 설정 로드
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+    final notificationSound = prefs.getBool('notification_sound') ?? true;
+    final notificationVibration = prefs.getBool('notification_vibration') ?? true;
+    final notificationTimings = prefs.getStringList('notification_timings') ?? ['1hour'];
+    
+    if (newFavoriteState && notificationsEnabled) {
+      // 즐겨찾기 추가 시 선택된 모든 시간에 대해 알림 예약
+      for (final timing in notificationTimings) {
+        Duration beforeDeadline;
+        switch (timing) {
+          case '3hours':
+            beforeDeadline = const Duration(hours: 3);
+            break;
+          case '1hour':
+            beforeDeadline = const Duration(hours: 1);
+            break;
+          case '15min':
+            beforeDeadline = const Duration(minutes: 15);
+            break;
+          case '10min':
+            beforeDeadline = const Duration(minutes: 10);
+            break;
+          default:
+            continue;
+        }
+        
+        await NotificationService.scheduleDeadlineNotification(
+          item: item,
+          beforeDeadline: beforeDeadline,
+          enableSound: notificationSound,
+          enableVibration: notificationVibration,
+        );
+      }
+    } else {
+      // 즐겨찾기 제거 시 모든 알림 취소
+      await NotificationService.cancelNotificationsForItem(itemId);
+    }
+    
     notifyListeners();
   }
 

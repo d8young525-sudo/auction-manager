@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../models/shipping_group_model.dart';
 import '../../models/item_model.dart';
 import '../../providers/user_provider.dart';
-import '../../providers/item_provider.dart';
 import '../../services/firebase_service.dart';
 import 'package:uuid/uuid.dart';
 
@@ -404,6 +403,30 @@ class _ShippingScreenState extends State<ShippingScreen> {
             else
               ...groupItems.map((item) => ListTile(
                     dense: true,
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: item.thumbnailUrl.isNotEmpty
+                          ? Image.network(
+                              item.thumbnailUrl,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 50,
+                                  height: 50,
+                                  color: Colors.grey.shade200,
+                                  child: const Icon(Icons.image_not_supported, size: 24),
+                                );
+                              },
+                            )
+                          : Container(
+                              width: 50,
+                              height: 50,
+                              color: Colors.grey.shade200,
+                              child: const Icon(Icons.shopping_bag, size: 24),
+                            ),
+                    ),
                     title: Text(item.title),
                     trailing: Text(
                       '¥${item.purchasePrice ?? 0}',

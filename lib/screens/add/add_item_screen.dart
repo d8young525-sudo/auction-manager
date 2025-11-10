@@ -22,14 +22,14 @@ class _AddItemScreenState extends State<AddItemScreen> {
   final _sizeController = TextEditingController();
   final _memoController = TextEditingController();
   final _priceController = TextEditingController();
-  final _commentController = TextEditingController();
   final _uuid = const Uuid();
 
   String _thumbnailUrl = '';
   DateTime? _deadline;
   bool _isLoading = false;
-  bool _isPurchased = false;
+  final bool _isPurchased = false;
   bool _isPublic = false;
+  bool _instantPurchase = false;
   String? _selectedShippingGroup;
   final List<String> _tags = [];
 
@@ -40,7 +40,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     _sizeController.dispose();
     _memoController.dispose();
     _priceController.dispose();
-    _commentController.dispose();
     super.dispose();
   }
 
@@ -199,9 +198,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         shippingGroupId: _selectedShippingGroup,
         isPublic: _isPublic,
         tags: _tags,
-        curatorComment: _commentController.text.isEmpty
-            ? null
-            : _commentController.text,
+        instantPurchase: _instantPurchase,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -424,8 +421,23 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 공개 설정
+              // 공개 설정 및 즉시결제 설정
               const Divider(height: 32),
+              
+              // 즉시결제 가능 여부
+              SwitchListTile(
+                title: const Text('즉시결제 가능'),
+                subtitle: const Text('즉시 구매 가능한 상품인 경우 활성화'),
+                value: _instantPurchase,
+                onChanged: (value) {
+                  setState(() => _instantPurchase = value);
+                },
+                contentPadding: EdgeInsets.zero,
+              ),
+              
+              const SizedBox(height: 8),
+              
+              // 공개 설정
               CheckboxListTile(
                 title: const Text('공개 (피드에 공유)'),
                 subtitle: const Text('다른 사용자들이 볼 수 있습니다'),
@@ -435,18 +447,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 },
                 contentPadding: EdgeInsets.zero,
               ),
-
-              if (_isPublic) ...[
-                TextFormField(
-                  controller: _commentController,
-                  decoration: const InputDecoration(
-                    labelText: '추천 코멘트',
-                    hintText: '이 아이템을 추천하는 이유를 적어주세요',
-                  ),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 16),
-              ],
 
               const SizedBox(height: 24),
 

@@ -169,6 +169,16 @@ class FirebaseService {
     await itemsCollection.doc(item.id).set(item.toJson());
   }
 
+  // 단일 아이템 조회
+  static Future<ItemModel?> getItem(String itemId) async {
+    final itemDoc = await itemsCollection.doc(itemId).get();
+    if (itemDoc.exists) {
+      final data = itemDoc.data() as Map<String, dynamic>;
+      return ItemModel.fromJson(data);
+    }
+    return null;
+  }
+
   // 아이템 업데이트
   static Future<void> updateItem(ItemModel item) async {
     await itemsCollection.doc(item.id).update(item.toJson());

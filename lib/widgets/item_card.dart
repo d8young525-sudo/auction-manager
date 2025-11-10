@@ -49,249 +49,189 @@ class ItemCard extends StatelessWidget {
             },
             borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // 즐겨찾기 (좌측)
-                  IconButton(
-                    icon: Icon(
-                      item.isFavorite ? Icons.star : Icons.star_border,
-                      color: item.isFavorite ? Colors.amber : Colors.grey,
+                  // 좌측: 즐겨찾기 버튼
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: IconButton(
+                      icon: Icon(
+                        item.isFavorite ? Icons.star : Icons.star_border,
+                        color: item.isFavorite ? Colors.amber : Colors.grey,
+                        size: 28,
+                      ),
+                      onPressed: () {
+                        itemProvider.toggleFavorite(item.id);
+                      },
+                      padding: EdgeInsets.zero,
                     ),
-                    onPressed: () {
-                      itemProvider.toggleFavorite(item.id);
-                    },
-                    constraints: const BoxConstraints(),
-                    padding: EdgeInsets.zero,
                   ),
                   const SizedBox(width: 8),
-
+                  
                   // 썸네일
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                     child: item.thumbnailUrl.isNotEmpty
                         ? CachedNetworkImage(
                             imageUrl: item.thumbnailUrl,
-                            width: 80,
-                            height: 80,
+                            width: 60,
+                            height: 60,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => Container(
-                              width: 80,
-                              height: 80,
+                              width: 60,
+                              height: 60,
                               color: Colors.grey.shade200,
                               child: const Center(
-                                child: CircularProgressIndicator(),
+                                child: CircularProgressIndicator(strokeWidth: 2),
                               ),
                             ),
                             errorWidget: (context, url, error) => Container(
-                              width: 80,
-                              height: 80,
+                              width: 60,
+                              height: 60,
                               color: Colors.grey.shade200,
-                              child: const Icon(Icons.image_not_supported),
+                              child: const Icon(Icons.image_not_supported, size: 20),
                             ),
                           )
                         : Container(
-                            width: 80,
-                            height: 80,
+                            width: 60,
+                            height: 60,
                             color: Colors.grey.shade200,
-                            child: const Icon(Icons.shopping_bag),
+                            child: const Icon(Icons.shopping_bag, size: 20),
                           ),
                   ),
-                  const SizedBox(width: 12),
-
-                  // 정보
+                  const SizedBox(width: 10),
+                  
+                  // 중앙: 메인 콘텐츠
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         // 제목
                         Text(
                           item.title,
                           style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 6),
-
-                        // 마감일
+                        const SizedBox(height: 4),
+                        
+                        // 마감일 + 즉시결제 배지
                         Row(
                           children: [
                             Icon(
                               Icons.access_time,
-                              size: 14,
-                              color: item.isDeadlineSoon
-                                  ? Colors.red
-                                  : Colors.grey.shade600,
+                              size: 12,
+                              color: item.isDeadlineSoon ? Colors.red : Colors.grey.shade600,
                             ),
                             const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                '마감: ${DateFormat('yy.MM.dd HH:mm').format(item.deadline)} (${item.deadlineString})',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: item.isDeadlineSoon
-                                      ? Colors.red
-                                      : Colors.grey.shade700,
-                                  fontWeight: item.isDeadlineSoon
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
+                            Text(
+                              '${DateFormat('MM/dd HH:mm').format(item.deadline)} (${item.deadlineString})',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: item.isDeadlineSoon ? Colors.red : Colors.grey.shade700,
+                                fontWeight: item.isDeadlineSoon ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
+                            if (item.instantPurchase) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(3),
+                                  border: Border.all(color: Colors.orange.shade300, width: 0.5),
+                                ),
+                                child: Text(
+                                  '즉시결제',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    color: Colors.orange.shade700,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
-                        const SizedBox(height: 8),
-
-                        // 사이즈, 메모, 추천문구 한 줄에 배치
-                        if ((item.size != null && item.size!.isNotEmpty) ||
-                            (item.memo != null && item.memo!.isNotEmpty) ||
-                            (item.curatorComment != null && item.curatorComment!.isNotEmpty))
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4, top: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // 사이즈, 메모 (왼쪽)
-                                Expanded(
-                                  flex: 2,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      if (item.size != null && item.size!.isNotEmpty)
-                                        Text(
-                                          '사이즈: ${item.size}',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey.shade700,
-                                          ),
-                                        ),
-                                      if (item.memo != null && item.memo!.isNotEmpty)
-                                        Text(
-                                          '메모: ${item.memo}',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey.shade700,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                    ],
-                                  ),
+                        const SizedBox(height: 3),
+                        
+                        // 사이즈 + 메모 한 줄에 배치
+                        Row(
+                          children: [
+                            if (item.size != null && item.size!.isNotEmpty) ...[
+                              Text(
+                                '사이즈: ${item.size}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
                                 ),
-                                // 추천문구 (우측, 큰 폰트)
-                                if (item.curatorComment != null && item.curatorComment!.isNotEmpty) ...[
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Text(
-                                      '💬 ${item.curatorComment}',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.blue.shade700,
-                                        fontWeight: FontWeight.w600,
-                                        fontStyle: FontStyle.italic,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: TextAlign.right,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-
-                        // 구매금액 표시
-                        if (item.purchasePrice != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              '구매금액: ¥${NumberFormat('#,###').format(item.purchasePrice)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.blue.shade700,
-                                fontWeight: FontWeight.bold,
                               ),
-                            ),
-                          ),
-
-                        // 합배송 그룹
-                        if (item.shippingGroupId != null) ...[
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.local_shipping,
-                                  size: 12,
-                                  color: Colors.blue.shade700,
+                              if (item.memo != null && item.memo!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                                  child: Text('•', style: TextStyle(color: Colors.grey.shade500, fontSize: 10)),
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '합배송',
+                            ],
+                            if (item.memo != null && item.memo!.isNotEmpty)
+                              Expanded(
+                                child: Text(
+                                  '메모: ${item.memo}',
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: Colors.blue.shade700,
+                                    color: Colors.grey.shade600,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ],
-                            ),
-                          ),
-                        ],
+                              ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
-
-                  // 구매완료 버튼 (우측)
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      OutlinedButton(
-                        onPressed: () {
-                          itemProvider.togglePurchased(item.id);
-                        },
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: item.isPurchased 
-                              ? Colors.green.shade50 
-                              : Colors.transparent,
-                          foregroundColor: item.isPurchased 
+                  const SizedBox(width: 8),
+                  
+                  // 우측: 구매완료 버튼
+                  SizedBox(
+                    width: 75,
+                    height: 36,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        itemProvider.togglePurchased(item.id);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: item.isPurchased 
+                            ? Colors.green.shade50 
+                            : Colors.transparent,
+                        foregroundColor: item.isPurchased 
+                            ? Colors.green.shade700 
+                            : Colors.grey.shade700,
+                        side: BorderSide(
+                          color: item.isPurchased 
                               ? Colors.green.shade700 
-                              : Colors.grey.shade700,
-                          side: BorderSide(
-                            color: item.isPurchased 
-                                ? Colors.green.shade700 
-                                : Colors.grey.shade400,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          minimumSize: const Size(70, 36),
+                              : Colors.grey.shade400,
+                          width: 1.2,
                         ),
-                        child: Text(
-                          '구매완료',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: item.isPurchased 
-                                ? FontWeight.bold 
-                                : FontWeight.normal,
-                          ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      ),
+                      child: Text(
+                        item.isPurchased ? '구매완료✓' : '구매완료',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: item.isPurchased 
+                              ? FontWeight.bold 
+                              : FontWeight.normal,
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),

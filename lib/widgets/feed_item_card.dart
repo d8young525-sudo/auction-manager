@@ -235,22 +235,7 @@ class _FeedItemCardState extends State<FeedItemCard> {
                             ),
                           ),
 
-                        // 큐레이터 코멘트
-                        if (widget.item.curatorComment != null &&
-                            widget.item.curatorComment!.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              '💬 ${widget.item.curatorComment}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.blue.shade700,
-                                fontStyle: FontStyle.italic,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+
                       ],
                     ),
                   ),

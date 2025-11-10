@@ -12,6 +12,14 @@ class DiscoverScreen extends StatefulWidget {
 
 class _DiscoverScreenState extends State<DiscoverScreen> {
   String _sortBy = 'latest'; // 'latest' or 'popular'
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +70,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           }
 
           final items = snapshot.data ?? [];
+          
+          // 검색 필터링
+          final filteredItems = items.where((item) {
+            if (_searchQuery.isEmpty) return true;
+            return item.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                   (item.memo?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+                   (item.size?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+          }).toList();
 
           if (items.isEmpty) {
             return Center(
@@ -95,12 +111,89 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              return FeedItemCard(item: items[index]);
-            },
+          return Column(
+            children: [
+              // 검색 바
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: '제목, 메모, 사이즈로 검색...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              setState(() {
+                                _searchController.clear();
+                                _searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                  onSubmitted: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                ),
+              ),
+              
+              // 검색 결과 카운트
+              if (_searchQuery.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '${filteredItems.length}개의 아이템 검색됨',
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              
+              // 아이템 리스트
+              Expanded(
+                child: filteredItems.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 48,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '검색 결과가 없습니다',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: filteredItems.length,
+                        itemBuilder: (context, index) {
+                          return FeedItemCard(item: filteredItems[index]);
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),

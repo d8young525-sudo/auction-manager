@@ -18,7 +18,7 @@ void main() async {
   );
 
   // 알림 서비스 초기화
-  await NotificationService.init();
+  await NotificationService.initialize();
 
   runApp(const MyApp());
 }

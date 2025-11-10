@@ -16,10 +16,13 @@ class KeywordScreen extends StatefulWidget {
 class _KeywordScreenState extends State<KeywordScreen> {
   final _uuid = const Uuid();
   final _textController = TextEditingController();
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void dispose() {
     _textController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -195,6 +198,13 @@ class _KeywordScreenState extends State<KeywordScreen> {
           }
 
           final keywords = snapshot.data ?? [];
+          
+          // 검색 필터링 (한국어 번역 기준)
+          final filteredKeywords = keywords.where((keyword) {
+            if (_searchQuery.isEmpty) return true;
+            final translation = keyword.translation ?? _translateKeyword(keyword.keyword);
+            return translation.toLowerCase().contains(_searchQuery.toLowerCase());
+          }).toList();
 
           if (keywords.isEmpty) {
             return Center(
@@ -225,47 +235,117 @@ class _KeywordScreenState extends State<KeywordScreen> {
             );
           }
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
+          return Column(
             children: [
-              // 안내 카드
-              Card(
-                color: Colors.blue.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.info, color: Colors.blue.shade700),
-                          const SizedBox(width: 8),
-                          Text(
-                            '키워드 관리',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade900,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '옥션 검색에 사용할 키워드를 저장하고 관리하세요. 복사 버튼으로 쉽게 붙여넣을 수 있습니다.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.blue.shade900,
-                        ),
-                      ),
-                    ],
+              // 검색 바
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: '한국어로 키워드 검색...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              setState(() {
+                                _searchController.clear();
+                                _searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
                   ),
+                  onSubmitted: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
                 ),
               ),
-              const SizedBox(height: 16),
+              
+              // 검색 결과 카운트
+              if (_searchQuery.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    '${filteredKeywords.length}개의 키워드 검색됨',
+                    style: TextStyle(
+                      color: Colors.grey.shade700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              
+              Expanded(
+                child: filteredKeywords.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 48,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '검색 결과가 없습니다',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [
+                          // 안내 카드
+                          Card(
+                            color: Colors.blue.shade50,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.info, color: Colors.blue.shade700),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '키워드 관리',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue.shade900,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '옥션 검색에 사용할 키워드를 저장하고 관리하세요. 복사 버튼으로 쉽게 붙여넣을 수 있습니다.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.blue.shade900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
 
-              // 키워드 목록
-              ...keywords.map((keyword) => Card(
+                          // 키워드 목록
+                          ...filteredKeywords.map((keyword) => Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       leading: Icon(
@@ -352,6 +432,9 @@ class _KeywordScreenState extends State<KeywordScreen> {
                       ),
                     ),
                   )),
+                        ],
+                      ),
+              ),
             ],
           );
         },

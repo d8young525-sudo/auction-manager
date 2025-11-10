@@ -174,7 +174,8 @@ class _KeywordScreenState extends State<KeywordScreen> {
     }
 
     return Scaffold(
-      body: StreamBuilder<List<KeywordModel>>(
+      body: SafeArea(
+        child: StreamBuilder<List<KeywordModel>>(
         stream: FirebaseService.getKeywordsStream(currentUser.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -435,6 +436,7 @@ class _KeywordScreenState extends State<KeywordScreen> {
             ],
           );
         },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addKeywords,

@@ -241,9 +241,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
       appBar: AppBar(
         title: const Text('아이템 추가'),
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,6 +468,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

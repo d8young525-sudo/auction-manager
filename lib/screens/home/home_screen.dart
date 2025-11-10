@@ -37,7 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
-      body: StreamBuilder<List<ItemModel>>(
+      body: SafeArea(
+        child: StreamBuilder<List<ItemModel>>(
         stream: FirebaseService.getMyItemsStream(currentUser.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -140,6 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           );
         },
+        ),
       ),
       // FAB 추가 버튼
       floatingActionButton: FloatingActionButton(

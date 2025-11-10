@@ -50,31 +50,54 @@ class ItemCard extends StatelessWidget {
             label: '수정',
           ),
           SlidableAction(
-            onPressed: (context) async {
+            onPressed: (slidableContext) async {
+              // BuildContext를 미리 저장
+              final scaffoldContext = context;
+              
               final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (context) => AlertDialog(
+                context: scaffoldContext,
+                builder: (dialogContext) => AlertDialog(
                   title: const Text('아이템 삭제'),
                   content: const Text('정말 삭제하시겠습니까?'),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context, false),
+                      onPressed: () => Navigator.pop(dialogContext, false),
                       child: const Text('취소'),
                     ),
                     TextButton(
-                      onPressed: () => Navigator.pop(context, true),
+                      onPressed: () => Navigator.pop(dialogContext, true),
                       child: const Text('삭제', style: TextStyle(color: Colors.red)),
                     ),
                   ],
                 ),
               );
               
-              if (confirmed == true && context.mounted) {
-                await itemProvider.deleteItem(item.id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('아이템이 삭제되었습니다')),
-                  );
+              if (confirmed == true) {
+                try {
+                  // 삭제 실행
+                  await itemProvider.deleteItem(item.id);
+                  
+                  // SnackBar 표시
+                  if (scaffoldContext.mounted) {
+                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('아이템이 삭제되었습니다'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  // 에러 처리
+                  if (scaffoldContext.mounted) {
+                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                      SnackBar(
+                        content: Text('삭제 실패: $e'),
+                        backgroundColor: Colors.red,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
                 }
               }
             },

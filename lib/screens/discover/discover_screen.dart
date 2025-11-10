@@ -18,9 +18,10 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StreamBuilder<List<ItemModel>>(
-        stream: FirebaseService.getPublicItemsStream(sortBy: _sortBy),
-        builder: (context, snapshot) {
+      body: SafeArea(
+        child: StreamBuilder<List<ItemModel>>(
+          stream: FirebaseService.getPublicItemsStream(sortBy: _sortBy),
+          builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -124,6 +125,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             ],
           );
         },
+        ),
       ),
     );
   }

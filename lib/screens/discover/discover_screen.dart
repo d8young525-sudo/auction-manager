@@ -18,9 +18,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('탐색'),
-      ),
       body: StreamBuilder<List<ItemModel>>(
         stream: FirebaseService.getPublicItemsStream(sortBy: _sortBy),
         builder: (context, snapshot) {

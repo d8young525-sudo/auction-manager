@@ -236,7 +236,6 @@ class _ShippingScreenState extends State<ShippingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('배송 그룹 관리'),
         actions: [
           TextButton.icon(
             onPressed: () {

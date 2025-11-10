@@ -37,9 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('내 구매 목록'),
-      ),
       body: StreamBuilder<List<ItemModel>>(
         stream: FirebaseService.getMyItemsStream(currentUser.uid),
         builder: (context, snapshot) {
@@ -85,34 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           return Column(
             children: [
-              // 마감 임박 배너
-              if (urgentItems.isNotEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  margin: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.shade200),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.alarm, color: Colors.red.shade700),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          '⏰ ${urgentItems.length}개의 아이템이 24시간 내에 마감됩니다!',
-                          style: TextStyle(
-                            color: Colors.red.shade700,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
               // 필터 탭 (간소화: 전체 | 즐겨찾기 | 등록일순)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

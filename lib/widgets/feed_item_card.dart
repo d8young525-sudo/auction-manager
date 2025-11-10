@@ -21,7 +21,6 @@ class FeedItemCard extends StatefulWidget {
 class _FeedItemCardState extends State<FeedItemCard> {
   UserModel? _author;
   bool _isLiked = false;
-  bool _isBookmarked = false;
   bool _isLoading = true;
 
   @override
@@ -34,18 +33,13 @@ class _FeedItemCardState extends State<FeedItemCard> {
     final currentUser = context.read<UserProvider>().currentUser;
     if (currentUser == null) return;
 
-    // 작성자 정보 로드
     final author = await FirebaseService.getUserById(widget.item.userId);
-    
-    // 좋아요/북마크 상태 로드
     final isLiked = await FirebaseService.isLiked(currentUser.uid, widget.item.id);
-    final isBookmarked = await FirebaseService.isBookmarked(currentUser.uid, widget.item.id);
 
     if (mounted) {
       setState(() {
         _author = author;
         _isLiked = isLiked;
-        _isBookmarked = isBookmarked;
         _isLoading = false;
       });
     }
@@ -58,9 +52,35 @@ class _FeedItemCardState extends State<FeedItemCard> {
     }
   }
 
+  Future<void> _addToMyList() async {
+    final currentUser = context.read<UserProvider>().currentUser;
+    if (currentUser == null) return;
+
+    try {
+      await context.read<ItemProvider>().addItemToMyList(widget.item, currentUser.uid);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('내 목록에 추가되었습니다'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('추가 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final itemProvider = context.watch<ItemProvider>();
     final userProvider = context.watch<UserProvider>();
     final currentUser = userProvider.currentUser;
 
@@ -74,12 +94,10 @@ class _FeedItemCardState extends State<FeedItemCard> {
       );
     }
 
-    // 열심 회원 여부 확인
     final isPremium = _author?.isPremiumUser ?? false;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      // 열심 회원은 카드 테두리 강조
       shape: isPremium
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -90,8 +108,9 @@ class _FeedItemCardState extends State<FeedItemCard> {
             )
           : null,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // 상단: 이미지 + 정보 영역
           InkWell(
             onTap: () async {
               try {
@@ -104,80 +123,64 @@ class _FeedItemCardState extends State<FeedItemCard> {
                 }
               }
             },
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 좌측: 북마크 버튼
-                  SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: IconButton(
-                      icon: Icon(
-                        _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                        color: _isBookmarked ? Colors.blue : Colors.grey,
-                        size: 36,
-                      ),
-                      onPressed: () async {
-                        final currentUser = context.read<UserProvider>().currentUser;
-                        if (currentUser != null) {
-                          await context.read<ItemProvider>().toggleBookmark(
-                            currentUser.uid,
-                            widget.item.id,
-                          );
-                          setState(() {
-                            _isBookmarked = !_isBookmarked;
-                          });
-                        }
-                      },
-                      padding: EdgeInsets.zero,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  
-                  // 썸네일
+                  // 100x100 썸네일
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: widget.item.thumbnailUrl.isNotEmpty
                         ? CachedNetworkImage(
                             imageUrl: widget.item.thumbnailUrl,
-                            width: 120,
-                            height: 120,
+                            width: 100,
+                            height: 100,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => Container(
-                              width: 120,
-                              height: 120,
+                              width: 100,
+                              height: 100,
                               color: Colors.grey.shade200,
                               child: const Center(
-                                child: CircularProgressIndicator(strokeWidth: 3),
+                                child: CircularProgressIndicator(strokeWidth: 2),
                               ),
                             ),
                             errorWidget: (context, url, error) => Container(
-                              width: 120,
-                              height: 120,
+                              width: 100,
+                              height: 100,
                               color: Colors.grey.shade200,
-                              child: const Icon(Icons.image_not_supported, size: 40),
+                              child: const Icon(Icons.image_not_supported, size: 36),
                             ),
                           )
                         : Container(
-                            width: 120,
-                            height: 120,
+                            width: 100,
+                            height: 100,
                             color: Colors.grey.shade200,
-                            child: const Icon(Icons.shopping_bag, size: 40),
+                            child: const Icon(Icons.shopping_bag, size: 36),
                           ),
                   ),
-                  const SizedBox(width: 14),
-
-                  // 중앙: 메인 콘텐츠
+                  
+                  // 세로 구분선
+                  Container(
+                    width: 1,
+                    height: 100,
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    color: Colors.grey.shade300,
+                  ),
+                  
+                  // 우측 정보 영역
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // 제목 + 작성자
+                        // 제목 + 좋아요
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: Text(
@@ -185,28 +188,41 @@ class _FeedItemCardState extends State<FeedItemCard> {
                                 style: const TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
+                                  height: 1.2,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '@${_author?.nickname ?? '?'}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isPremium 
-                                    ? Colors.amber.shade900 
-                                    : Colors.grey.shade600,
-                                fontWeight: isPremium 
-                                    ? FontWeight.bold 
-                                    : FontWeight.w500,
+                            // 좋아요 버튼 (컴팩트)
+                            SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: IconButton(
+                                icon: Icon(
+                                  _isLiked ? Icons.favorite : Icons.favorite_border,
+                                  color: _isLiked ? Colors.red : Colors.grey,
+                                  size: 20,
+                                ),
+                                onPressed: () async {
+                                  final currentUser = context.read<UserProvider>().currentUser;
+                                  if (currentUser != null) {
+                                    await context.read<ItemProvider>().toggleLike(
+                                      currentUser.uid,
+                                      widget.item.id,
+                                    );
+                                    setState(() {
+                                      _isLiked = !_isLiked;
+                                    });
+                                  }
+                                },
+                                padding: EdgeInsets.zero,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-
+                        const SizedBox(height: 2),
+                        
                         // 마감일 + 즉시결제 배지
                         Row(
                           children: [
@@ -216,12 +232,16 @@ class _FeedItemCardState extends State<FeedItemCard> {
                               color: widget.item.isDeadlineSoon ? Colors.red : Colors.grey.shade600,
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              '${DateFormat('MM/dd HH:mm').format(widget.item.deadline)} (${widget.item.deadlineString})',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: widget.item.isDeadlineSoon ? Colors.red : Colors.grey.shade700,
-                                fontWeight: widget.item.isDeadlineSoon ? FontWeight.bold : FontWeight.normal,
+                            Expanded(
+                              child: Text(
+                                '${DateFormat('MM/dd HH:mm').format(widget.item.deadline)} (${widget.item.deadlineString})',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: widget.item.isDeadlineSoon ? Colors.red : Colors.grey.shade700,
+                                  fontWeight: widget.item.isDeadlineSoon ? FontWeight.bold : FontWeight.normal,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             if (widget.item.instantPurchase) ...[
@@ -245,9 +265,9 @@ class _FeedItemCardState extends State<FeedItemCard> {
                             ],
                           ],
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 2),
                         
-                        // 사이즈 + 메모 한 줄에 배치
+                        // 사이즈 / 메모
                         Row(
                           children: [
                             if (widget.item.size != null && widget.item.size!.isNotEmpty) ...[
@@ -278,39 +298,60 @@ class _FeedItemCardState extends State<FeedItemCard> {
                               ),
                           ],
                         ),
-
-
+                        const SizedBox(height: 2),
+                        
+                        // 닉네임 배지 (맨 아래)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isPremium ? Colors.amber.shade50 : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                            border: isPremium 
+                                ? Border.all(color: Colors.amber.shade300, width: 0.5)
+                                : null,
+                          ),
+                          child: Text(
+                            '@${_author?.nickname ?? '?'}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: isPremium ? FontWeight.bold : FontWeight.w600,
+                              color: isPremium ? Colors.amber.shade900 : Colors.grey.shade700,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  
-                  // 우측: 좋아요 버튼
-                  SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: IconButton(
-                      icon: Icon(
-                        _isLiked ? Icons.favorite : Icons.favorite_border,
-                        color: _isLiked ? Colors.red : Colors.grey,
-                        size: 36,
-                      ),
-                      onPressed: () async {
-                        final currentUser = context.read<UserProvider>().currentUser;
-                        if (currentUser != null) {
-                          await context.read<ItemProvider>().toggleLike(
-                            currentUser.uid,
-                            widget.item.id,
-                          );
-                          setState(() {
-                            _isLiked = !_isLiked;
-                          });
-                        }
-                      },
-                      padding: EdgeInsets.zero,
-                    ),
-                  ),
                 ],
+              ),
+            ),
+          ),
+          
+          // 하단 구분선
+          Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+          
+          // 하단: 내 목록에 추가 버튼 (홈과 동일한 스타일)
+          SizedBox(
+            width: double.infinity,
+            height: 38,
+            child: TextButton.icon(
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text(
+                '내 목록에 추가',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              onPressed: _addToMyList,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.blue.shade700,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                ),
               ),
             ),
           ),

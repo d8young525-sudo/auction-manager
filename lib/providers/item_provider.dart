@@ -187,6 +187,11 @@ class ItemProvider with ChangeNotifier {
     await addItem(newItem);
   }
 
+  // 내 목록에 추가 (별칭)
+  Future<void> addItemToMyList(ItemModel sourceItem, String userId) async {
+    await addToMyList(sourceItem, userId);
+  }
+
   // 그룹 업데이트 (나중에 구현)
   Future<void> updateShippingGroup(String groupId) async {
     // TODO: 구현

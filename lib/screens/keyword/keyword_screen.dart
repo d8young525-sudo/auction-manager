@@ -174,9 +174,6 @@ class _KeywordScreenState extends State<KeywordScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('키워드 관리'),
-      ),
       body: StreamBuilder<List<KeywordModel>>(
         stream: FirebaseService.getKeywordsStream(currentUser.uid),
         builder: (context, snapshot) {

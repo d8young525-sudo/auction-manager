@@ -49,19 +49,19 @@ class ItemCard extends StatelessWidget {
             },
             borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // 좌측: 즐겨찾기 버튼
                   SizedBox(
-                    width: 40,
-                    height: 40,
+                    width: 50,
+                    height: 50,
                     child: IconButton(
                       icon: Icon(
                         item.isFavorite ? Icons.star : Icons.star_border,
                         color: item.isFavorite ? Colors.amber : Colors.grey,
-                        size: 28,
+                        size: 36,
                       ),
                       onPressed: () {
                         itemProvider.toggleFavorite(item.id);
@@ -69,40 +69,40 @@ class ItemCard extends StatelessWidget {
                       padding: EdgeInsets.zero,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   
                   // 썸네일
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(8),
                     child: item.thumbnailUrl.isNotEmpty
                         ? CachedNetworkImage(
                             imageUrl: item.thumbnailUrl,
-                            width: 60,
-                            height: 60,
+                            width: 120,
+                            height: 120,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => Container(
-                              width: 60,
-                              height: 60,
+                              width: 120,
+                              height: 120,
                               color: Colors.grey.shade200,
                               child: const Center(
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(strokeWidth: 3),
                               ),
                             ),
                             errorWidget: (context, url, error) => Container(
-                              width: 60,
-                              height: 60,
+                              width: 120,
+                              height: 120,
                               color: Colors.grey.shade200,
-                              child: const Icon(Icons.image_not_supported, size: 20),
+                              child: const Icon(Icons.image_not_supported, size: 40),
                             ),
                           )
                         : Container(
-                            width: 60,
-                            height: 60,
+                            width: 120,
+                            height: 120,
                             color: Colors.grey.shade200,
-                            child: const Icon(Icons.shopping_bag, size: 20),
+                            child: const Icon(Icons.shopping_bag, size: 40),
                           ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 14),
                   
                   // 중앙: 메인 콘텐츠
                   Expanded(
@@ -114,27 +114,27 @@ class ItemCard extends StatelessWidget {
                         Text(
                           item.title,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 17,
                             fontWeight: FontWeight.w600,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         
                         // 마감일 + 즉시결제 배지
                         Row(
                           children: [
                             Icon(
                               Icons.access_time,
-                              size: 12,
+                              size: 15,
                               color: item.isDeadlineSoon ? Colors.red : Colors.grey.shade600,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${DateFormat('MM/dd HH:mm').format(item.deadline)} (${item.deadlineString})',
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 13,
                                 color: item.isDeadlineSoon ? Colors.red : Colors.grey.shade700,
                                 fontWeight: item.isDeadlineSoon ? FontWeight.bold : FontWeight.normal,
                               ),
@@ -142,16 +142,16 @@ class ItemCard extends StatelessWidget {
                             if (item.instantPurchase) ...[
                               const SizedBox(width: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(3),
+                                  borderRadius: BorderRadius.circular(4),
                                   border: Border.all(color: Colors.orange.shade300, width: 0.5),
                                 ),
                                 child: Text(
                                   '즉시결제',
                                   style: TextStyle(
-                                    fontSize: 9,
+                                    fontSize: 11,
                                     color: Colors.orange.shade700,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -160,7 +160,7 @@ class ItemCard extends StatelessWidget {
                             ],
                           ],
                         ),
-                        const SizedBox(height: 3),
+                        const SizedBox(height: 5),
                         
                         // 사이즈 + 메모 한 줄에 배치
                         Row(
@@ -169,14 +169,14 @@ class ItemCard extends StatelessWidget {
                               Text(
                                 '사이즈: ${item.size}',
                                 style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 13,
                                   color: Colors.grey.shade600,
                                 ),
                               ),
                               if (item.memo != null && item.memo!.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 6),
-                                  child: Text('•', style: TextStyle(color: Colors.grey.shade500, fontSize: 10)),
+                                  child: Text('•', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
                                 ),
                             ],
                             if (item.memo != null && item.memo!.isNotEmpty)
@@ -184,7 +184,7 @@ class ItemCard extends StatelessWidget {
                                 child: Text(
                                   '메모: ${item.memo}',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 13,
                                     color: Colors.grey.shade600,
                                   ),
                                   maxLines: 1,
@@ -196,12 +196,12 @@ class ItemCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   
                   // 우측: 구매완료 버튼
                   SizedBox(
-                    width: 75,
-                    height: 36,
+                    width: 85,
+                    height: 44,
                     child: OutlinedButton(
                       onPressed: () {
                         itemProvider.togglePurchased(item.id);
@@ -219,13 +219,13 @@ class ItemCard extends StatelessWidget {
                               : Colors.grey.shade400,
                           width: 1.2,
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                       ),
                       child: Text(
                         item.isPurchased ? '구매완료✓' : '구매완료',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 13,
                           fontWeight: item.isPurchased 
                               ? FontWeight.bold 
                               : FontWeight.normal,

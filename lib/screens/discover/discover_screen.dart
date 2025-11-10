@@ -12,42 +12,14 @@ class DiscoverScreen extends StatefulWidget {
 
 class _DiscoverScreenState extends State<DiscoverScreen> {
   String _sortBy = 'latest'; // 'latest' or 'popular'
-  final _searchController = TextEditingController();
-  String _searchQuery = '';
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('발견'),
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
-            onSelected: (value) {
-              setState(() => _sortBy = value);
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'latest',
-                child: Text('최신순'),
-              ),
-              const PopupMenuItem(
-                value: 'deadline',
-                child: Text('마감일자'),
-              ),
-              const PopupMenuItem(
-                value: 'popular',
-                child: Text('인기순'),
-              ),
-            ],
-          ),
-        ],
+        title: const Text('탐색'),
       ),
       body: StreamBuilder<List<ItemModel>>(
         stream: FirebaseService.getPublicItemsStream(sortBy: _sortBy),
@@ -70,14 +42,6 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
           }
 
           final items = snapshot.data ?? [];
-          
-          // 검색 필터링
-          final filteredItems = items.where((item) {
-            if (_searchQuery.isEmpty) return true;
-            return item.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                   (item.memo?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-                   (item.size?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
-          }).toList();
 
           if (items.isEmpty) {
             return Center(
@@ -113,58 +77,25 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
           return Column(
             children: [
-              // 검색 바
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: '제목, 메모, 사이즈로 검색...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              setState(() {
-                                _searchController.clear();
-                                _searchQuery = '';
-                              });
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                  ),
-                  onSubmitted: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
+              // 정렬 탭
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildSortTab('최신순', 'latest'),
+                    const SizedBox(width: 8),
+                    _buildSortTab('마감임박', 'deadline'),
+                    const SizedBox(width: 8),
+                    _buildSortTab('인기순', 'popular'),
+                  ],
                 ),
               ),
               
-              // 검색 결과 카운트
-              if (_searchQuery.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '${filteredItems.length}개의 아이템 검색됨',
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-              
               // 아이템 리스트
               Expanded(
-                child: filteredItems.isEmpty
+                child: items.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -187,15 +118,39 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
-                        itemCount: filteredItems.length,
+                        itemCount: items.length,
                         itemBuilder: (context, index) {
-                          return FeedItemCard(item: filteredItems[index]);
+                          return FeedItemCard(item: items[index]);
                         },
                       ),
               ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildSortTab(String label, String value) {
+    final isSelected = _sortBy == value;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _sortBy = value);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey.shade700,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 14,
+          ),
+        ),
       ),
     );
   }

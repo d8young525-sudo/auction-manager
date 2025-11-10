@@ -114,28 +114,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
 
               // 필터 탭 (간소화: 전체 | 즐겨찾기 | 등록일순)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
+              Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                alignment: Alignment.centerLeft,
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    ChoiceChip(
-                      label: const Text('전체'),
-                      selected: itemProvider.currentFilter == ItemFilter.all,
-                      onSelected: (_) => itemProvider.setFilter(ItemFilter.all),
-                    ),
+                    _buildFilterTab('전체', ItemFilter.all, itemProvider),
                     const SizedBox(width: 8),
-                    ChoiceChip(
-                      label: const Text('즐겨찾기'),
-                      selected: itemProvider.currentFilter == ItemFilter.favorite,
-                      onSelected: (_) => itemProvider.setFilter(ItemFilter.favorite),
-                    ),
+                    _buildFilterTab('즐겨찾기', ItemFilter.favorite, itemProvider),
                     const SizedBox(width: 8),
-                    ChoiceChip(
-                      label: const Text('등록일순'),
-                      selected: itemProvider.currentFilter == ItemFilter.createdDesc,
-                      onSelected: (_) => itemProvider.setFilter(ItemFilter.createdDesc),
-                    ),
+                    _buildFilterTab('등록일순', ItemFilter.createdDesc, itemProvider),
                   ],
                 ),
               ),
@@ -191,6 +180,28 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildFilterTab(String label, ItemFilter filter, ItemProvider itemProvider) {
+    final isSelected = itemProvider.currentFilter == filter;
+    return GestureDetector(
+      onTap: () => itemProvider.setFilter(filter),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey.shade700,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 14,
+          ),
+        ),
       ),
     );
   }

@@ -402,37 +402,40 @@ class _ShippingScreenState extends State<ShippingScreen> {
               )
             else
               ...groupItems.map((item) => ListTile(
-                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(8),
                       child: item.thumbnailUrl.isNotEmpty
                           ? Image.network(
                               item.thumbnailUrl,
-                              width: 50,
-                              height: 50,
+                              width: 120,
+                              height: 120,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
-                                  width: 50,
-                                  height: 50,
+                                  width: 120,
+                                  height: 120,
                                   color: Colors.grey.shade200,
-                                  child: const Icon(Icons.image_not_supported, size: 24),
+                                  child: const Icon(Icons.image_not_supported, size: 40),
                                 );
                               },
                             )
                           : Container(
-                              width: 50,
-                              height: 50,
+                              width: 120,
+                              height: 120,
                               color: Colors.grey.shade200,
-                              child: const Icon(Icons.shopping_bag, size: 24),
+                              child: const Icon(Icons.shopping_bag, size: 40),
                             ),
                     ),
-                    title: Text(item.title),
+                    title: Text(
+                      item.title,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
                     trailing: Text(
                       '¥${item.purchasePrice ?? 0}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 15,
+                        fontSize: 17,
                       ),
                     ),
                   )),

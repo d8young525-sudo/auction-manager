@@ -9,7 +9,9 @@ import '../../providers/user_provider.dart';
 import '../../services/metadata_service.dart';
 
 class AddItemScreen extends StatefulWidget {
-  const AddItemScreen({super.key});
+  final ItemModel? editItem; // 수정할 아이템 (null이면 새로 추가)
+  
+  const AddItemScreen({super.key, this.editItem});
 
   @override
   State<AddItemScreen> createState() => _AddItemScreenState();
@@ -27,11 +29,38 @@ class _AddItemScreenState extends State<AddItemScreen> {
   String _thumbnailUrl = '';
   DateTime? _deadline;
   bool _isLoading = false;
-  final bool _isPurchased = false;
+  bool _isPurchased = false;
   bool _isPublic = false;
   bool _instantPurchase = false;
   String? _selectedShippingGroup;
   final List<String> _tags = [];
+  
+  bool get _isEditMode => widget.editItem != null;
+
+  @override
+  void initState() {
+    super.initState();
+    // 수정 모드일 경우 기존 데이터 로드
+    if (_isEditMode) {
+      _loadItemData();
+    }
+  }
+  
+  void _loadItemData() {
+    final item = widget.editItem!;
+    _urlController.text = item.url;
+    _titleController.text = item.title;
+    _sizeController.text = item.size ?? '';
+    _memoController.text = item.memo ?? '';
+    if (item.purchasePrice != null) {
+      _priceController.text = item.purchasePrice.toString();
+    }
+    _thumbnailUrl = item.thumbnailUrl;
+    _deadline = item.deadline;
+    _isPurchased = item.isPurchased;
+    _isPublic = item.isPublic;
+    _instantPurchase = item.instantPurchase;
+  }
 
   @override
   void dispose() {
@@ -182,38 +211,66 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
       if (currentUser == null) return;
 
-      final item = ItemModel(
-        id: _uuid.v4(),
-        userId: currentUser.uid,
-        url: _urlController.text,
-        title: _titleController.text,
-        thumbnailUrl: _thumbnailUrl,
-        deadline: _deadline!,
-        size: _sizeController.text.isEmpty ? null : _sizeController.text,
-        memo: _memoController.text.isEmpty ? null : _memoController.text,
-        isPurchased: _isPurchased,
-        purchasePrice: _priceController.text.isEmpty
-            ? null
-            : int.tryParse(_priceController.text.replaceAll(',', '')),
-        shippingGroupId: _selectedShippingGroup,
-        isPublic: _isPublic,
-        tags: _tags,
-        instantPurchase: _instantPurchase,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      if (_isEditMode) {
+        // 수정 모드: 기존 아이템 업데이트
+        final updatedItem = widget.editItem!.copyWith(
+          url: _urlController.text,
+          title: _titleController.text,
+          thumbnailUrl: _thumbnailUrl,
+          deadline: _deadline!,
+          size: _sizeController.text.isEmpty ? null : _sizeController.text,
+          memo: _memoController.text.isEmpty ? null : _memoController.text,
+          isPurchased: _isPurchased,
+          purchasePrice: _priceController.text.isEmpty
+              ? null
+              : int.tryParse(_priceController.text.replaceAll(',', '')),
+          shippingGroupId: _selectedShippingGroup,
+          isPublic: _isPublic,
+          instantPurchase: _instantPurchase,
+          updatedAt: DateTime.now(),
+        );
 
-      await itemProvider.addItem(item);
+        await itemProvider.updateItem(updatedItem);
 
-      // 합배송 그룹 업데이트
-      if (_selectedShippingGroup != null) {
-        await itemProvider.updateShippingGroup(_selectedShippingGroup!);
-      }
+        if (mounted) {
+          _showSnackBar('아이템이 수정되었습니다');
+          Navigator.of(context).pop();
+        }
+      } else {
+        // 추가 모드: 새 아이템 생성
+        final item = ItemModel(
+          id: _uuid.v4(),
+          userId: currentUser.uid,
+          url: _urlController.text,
+          title: _titleController.text,
+          thumbnailUrl: _thumbnailUrl,
+          deadline: _deadline!,
+          size: _sizeController.text.isEmpty ? null : _sizeController.text,
+          memo: _memoController.text.isEmpty ? null : _memoController.text,
+          isPurchased: _isPurchased,
+          purchasePrice: _priceController.text.isEmpty
+              ? null
+              : int.tryParse(_priceController.text.replaceAll(',', '')),
+          shippingGroupId: _selectedShippingGroup,
+          isPublic: _isPublic,
+          tags: _tags,
+          instantPurchase: _instantPurchase,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
 
-      if (mounted) {
-        _showSnackBar('아이템이 추가되었습니다');
-        // 홈 탭으로 복귀 (MainTabScreen의 첫 번째 탭)
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        await itemProvider.addItem(item);
+
+        // 합배송 그룹 업데이트
+        if (_selectedShippingGroup != null) {
+          await itemProvider.updateShippingGroup(_selectedShippingGroup!);
+        }
+
+        if (mounted) {
+          _showSnackBar('아이템이 추가되었습니다');
+          // 홈 탭으로 복귀 (MainTabScreen의 첫 번째 탭)
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
       }
     }
   }
@@ -239,7 +296,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('아이템 추가'),
+        title: Text(_isEditMode ? '아이템 수정' : '아이템 추가'),
       ),
       body: SafeArea(
         child: Form(
@@ -457,9 +514,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: _save,
-                  child: const Text(
-                    '저장',
-                    style: TextStyle(
+                  child: Text(
+                    _isEditMode ? '수정 완료' : '저장',
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),

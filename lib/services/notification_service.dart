@@ -15,31 +15,45 @@ class NotificationService {
   static Future<void> initialize() async {
     if (_initialized) return;
 
-    // 타임존 초기화
-    tz.initializeTimeZones();
-    tz.setLocalLocation(tz.getLocation('Asia/Seoul'));
+    try {
+      // 타임존 초기화
+      tz.initializeTimeZones();
+      tz.setLocalLocation(tz.getLocation('Asia/Seoul'));
 
-    // Android 설정
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    
-    // iOS 설정
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+      // Android 설정
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      
+      // iOS 설정
+      const iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
 
-    await _notifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTapped,
-    );
+      await _notifications.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: _onNotificationTapped,
+      );
 
-    _initialized = true;
+      _initialized = true;
+      
+      if (kDebugMode) {
+        debugPrint('✅ NotificationService initialized successfully');
+      }
+    } catch (e) {
+      // 초기화 실패 시 에러 로그만 출력하고 앱은 계속 실행
+      if (kDebugMode) {
+        debugPrint('⚠️ NotificationService initialization failed: $e');
+        debugPrint('📌 앱은 알림 기능 없이 계속 실행됩니다');
+      }
+      // _initialized를 false로 유지하여 알림 기능을 비활성화
+      _initialized = false;
+    }
   }
 
   /// 알림 클릭 시 처리
@@ -90,6 +104,14 @@ class NotificationService {
   }) async {
     if (!_initialized) {
       await initialize();
+    }
+    
+    // 초기화 실패 시 알림 예약 스킵
+    if (!_initialized) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Notification not scheduled - service not initialized');
+      }
+      return;
     }
 
     final notificationTime = item.deadline.subtract(beforeDeadline);
@@ -143,16 +165,25 @@ class NotificationService {
 
   /// 특정 아이템의 모든 알림 취소
   static Future<void> cancelNotificationsForItem(String itemId) async {
-    final durations = [
-      const Duration(hours: 3),
-      const Duration(hours: 1),
-      const Duration(minutes: 15),
-      const Duration(minutes: 10),
-    ];
+    // 초기화되지 않았으면 취소 스킵
+    if (!_initialized) return;
+    
+    try {
+      final durations = [
+        const Duration(hours: 3),
+        const Duration(hours: 1),
+        const Duration(minutes: 15),
+        const Duration(minutes: 10),
+      ];
 
-    for (final duration in durations) {
-      final notificationId = _getNotificationId(itemId, duration);
-      await _notifications.cancel(notificationId);
+      for (final duration in durations) {
+        final notificationId = _getNotificationId(itemId, duration);
+        await _notifications.cancel(notificationId);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Failed to cancel notifications: $e');
+      }
     }
   }
 

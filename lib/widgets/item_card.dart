@@ -7,6 +7,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import '../models/item_model.dart';
 import '../providers/item_provider.dart';
 import '../screens/home/item_detail_screen.dart';
+import '../screens/add/add_item_screen.dart';
 
 class ItemCard extends StatelessWidget {
   final ItemModel item;
@@ -36,11 +37,12 @@ class ItemCard extends StatelessWidget {
         extentRatio: 0.3,
         children: [
           SlidableAction(
-            onPressed: (context) {
+            onPressed: (slidableContext) {
+              // 수정 화면으로 이동 (아이템 정보 전달)
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => ItemDetailScreen(item: item),
+                  builder: (_) => AddItemScreen(editItem: item),
                 ),
               );
             },

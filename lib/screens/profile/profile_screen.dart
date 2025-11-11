@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/user_provider.dart';
-import '../../providers/item_provider.dart';
+import '../../models/item_model.dart';
+import '../../models/shipping_group_model.dart';
+import '../../services/firebase_service.dart';
 import '../auth/login_screen.dart';
 import 'admin_screen.dart';
 import 'settings_screen.dart';
@@ -12,7 +14,6 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
-    final itemProvider = context.watch<ItemProvider>();
     final currentUser = userProvider.currentUser;
 
     if (currentUser == null) {
@@ -20,10 +21,6 @@ class ProfileScreen extends StatelessWidget {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    final myItems = itemProvider.getMyItems(currentUser.uid);
-    final publicItems = myItems.where((item) => item.isPublic).toList();
-    final shippingGroups = itemProvider.getShippingGroups(currentUser.uid);
 
     return Scaffold(
       appBar: AppBar(
@@ -41,10 +38,29 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
+      body: StreamBuilder<List<ItemModel>>(
+        stream: FirebaseService.getMyItemsStream(currentUser.uid),
+        builder: (context, itemSnapshot) {
+          if (itemSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final myItems = itemSnapshot.data ?? [];
+          final publicItems = myItems.where((item) => item.isPublic).toList();
+
+          return StreamBuilder<List<ShippingGroupModel>>(
+            stream: FirebaseService.getShippingGroupsStream(currentUser.uid),
+            builder: (context, groupSnapshot) {
+              if (groupSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final shippingGroups = groupSnapshot.data ?? [];
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
             // 프로필 정보
             CircleAvatar(
               radius: 50,
@@ -175,8 +191,12 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
             ),
-          ],
-        ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -231,7 +251,8 @@ class ProfileScreen extends StatelessWidget {
 
     for (final item in purchasedItems) {
       final price = (item.purchasePrice ?? 0) as int;
-      // updatedAt 기준으로 월별 통계 (구매완료 버튼 누른 시점)
+      // updatedAt 기준으로 월별 통계
+      // (마지막 수정 시점 = 구매완료 또는 구매금액 입력 시점)
       final purchaseDate = DateTime(
         item.updatedAt.year,
         item.updatedAt.month,

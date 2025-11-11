@@ -523,10 +523,38 @@ class _ShippingScreenState extends State<ShippingScreen> {
           children: [
             Row(
               children: [
+                // 썸네일 추가
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: item.thumbnailUrl.isNotEmpty
+                      ? Image.network(
+                          item.thumbnailUrl,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 80,
+                              height: 80,
+                              color: Colors.grey.shade200,
+                              child: const Icon(Icons.image_not_supported, size: 30),
+                            );
+                          },
+                        )
+                      : Container(
+                          width: 80,
+                          height: 80,
+                          color: Colors.grey.shade200,
+                          child: const Icon(Icons.shopping_bag, size: 30),
+                        ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     item.title,
                     style: const TextStyle(fontWeight: FontWeight.w500),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Text(

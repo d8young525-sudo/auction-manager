@@ -95,27 +95,104 @@ class _AddItemScreenState extends State<AddItemScreen> {
   }
 
   Future<void> _selectDate() async {
-    final date = await showDatePicker(
+    // 날짜/시간 타이핑 입력 다이얼로그
+    final yearController = TextEditingController();
+    final monthController = TextEditingController();
+    final dayController = TextEditingController();
+    final hourController = TextEditingController();
+    final minuteController = TextEditingController();
+    
+    final yearFocus = FocusNode();
+    final monthFocus = FocusNode();
+    final dayFocus = FocusNode();
+    final hourFocus = FocusNode();
+    final minuteFocus = FocusNode();
+    
+    // 현재 날짜로 초기값 설정
+    final now = DateTime.now();
+    yearController.text = now.year.toString();
+    monthController.text = now.month.toString().padLeft(2, '0');
+    dayController.text = now.day.toString().padLeft(2, '0');
+    
+    final result = await showDialog<Map<String, int>>(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-
-    if (date != null && mounted) {
-      // 시간 입력 다이얼로그 (타이핑 방식 + 자동 포커스 이동)
-      final hourController = TextEditingController();
-      final minuteController = TextEditingController();
-      final hourFocus = FocusNode();
-      final minuteFocus = FocusNode();
-      
-      final result = await showDialog<Map<String, int>>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('마감 시간 입력'),
-          content: Column(
+      builder: (context) => AlertDialog(
+        title: const Text('마감일시 입력'),
+        content: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 날짜 입력
+              const Text('날짜', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: yearController,
+                      focusNode: yearFocus,
+                      decoration: const InputDecoration(
+                        labelText: '년',
+                        hintText: '2024',
+                        suffixText: '년',
+                      ),
+                      keyboardType: TextInputType.number,
+                      maxLength: 4,
+                      autofocus: true,
+                      onChanged: (value) {
+                        if (value.length == 4) {
+                          monthFocus.requestFocus();
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: monthController,
+                      focusNode: monthFocus,
+                      decoration: const InputDecoration(
+                        labelText: '월',
+                        hintText: '01',
+                        suffixText: '월',
+                      ),
+                      keyboardType: TextInputType.number,
+                      maxLength: 2,
+                      onChanged: (value) {
+                        if (value.length == 2) {
+                          dayFocus.requestFocus();
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: dayController,
+                      focusNode: dayFocus,
+                      decoration: const InputDecoration(
+                        labelText: '일',
+                        hintText: '01',
+                        suffixText: '일',
+                      ),
+                      keyboardType: TextInputType.number,
+                      maxLength: 2,
+                      onChanged: (value) {
+                        if (value.length == 2) {
+                          hourFocus.requestFocus();
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              // 시간 입력
+              const Text('시간', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
@@ -129,9 +206,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       ),
                       keyboardType: TextInputType.number,
                       maxLength: 2,
-                      autofocus: true,
                       onChanged: (value) {
-                        // 2글자 입력되면 자동으로 분 입력으로 이동
                         if (value.length == 2) {
                           minuteFocus.requestFocus();
                         }
@@ -156,7 +231,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                '24시간 형식으로 입력해주세요 (예: 14:30)',
+                '예: 2024년 11월 15일 14시 30분',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade600,
@@ -164,41 +239,88 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('취소'),
-            ),
-            TextButton(
-              onPressed: () {
-                final hour = int.tryParse(hourController.text) ?? 14;
-                final minute = int.tryParse(minuteController.text) ?? 0;
-                
-                if (hour >= 0 && hour < 24 && minute >= 0 && minute < 60) {
-                  Navigator.pop(context, {'hour': hour, 'minute': minute});
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('올바른 시간을 입력해주세요')),
-                  );
-                }
-              },
-              child: const Text('확인'),
-            ),
-          ],
         ),
-      );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              final year = int.tryParse(yearController.text) ?? now.year;
+              final month = int.tryParse(monthController.text) ?? now.month;
+              final day = int.tryParse(dayController.text) ?? now.day;
+              final hour = int.tryParse(hourController.text) ?? 14;
+              final minute = int.tryParse(minuteController.text) ?? 0;
+              
+              // 유효성 검증
+              if (year < now.year || year > now.year + 10) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('올바른 년도를 입력해주세요')),
+                );
+                return;
+              }
+              
+              if (month < 1 || month > 12) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('월은 1~12 사이여야 합니다')),
+                );
+                return;
+              }
+              
+              if (day < 1 || day > 31) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('일은 1~31 사이여야 합니다')),
+                );
+                return;
+              }
+              
+              if (hour < 0 || hour >= 24) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('시간은 0~23 사이여야 합니다')),
+                );
+                return;
+              }
+              
+              if (minute < 0 || minute >= 60) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('분은 0~59 사이여야 합니다')),
+                );
+                return;
+              }
+              
+              try {
+                // DateTime 생성으로 유효한 날짜인지 확인
+                DateTime(year, month, day, hour, minute);
+                Navigator.pop(context, {
+                  'year': year,
+                  'month': month,
+                  'day': day,
+                  'hour': hour,
+                  'minute': minute,
+                });
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('유효하지 않은 날짜입니다')),
+                );
+              }
+            },
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
 
-      if (result != null) {
-        setState(() {
-          _deadline = DateTime(
-            date.year,
-            date.month,
-            date.day,
-            result['hour']!,
-            result['minute']!,
-          );
-        });
-      }
+    if (result != null && mounted) {
+      setState(() {
+        _deadline = DateTime(
+          result['year']!,
+          result['month']!,
+          result['day']!,
+          result['hour']!,
+          result['minute']!,
+        );
+      });
     }
   }
 

@@ -68,18 +68,12 @@ class _HomeScreenState extends State<HomeScreen> {
               // 기본: 마감일순 정렬
               filteredItems.sort((a, b) => a.deadline.compareTo(b.deadline));
               break;
-            default:
-              break;
           }
           
           // all 필터인 경우에만 마감일순 정렬 (기본)
           if (itemProvider.currentFilter == ItemFilter.all) {
             filteredItems.sort((a, b) => a.deadline.compareTo(b.deadline));
           }
-
-          final urgentItems = filteredItems
-              .where((item) => item.isDeadlineSoon)
-              .toList();
 
           return Column(
             children: [

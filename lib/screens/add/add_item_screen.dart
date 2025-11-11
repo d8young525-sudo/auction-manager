@@ -103,9 +103,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
     );
 
     if (date != null && mounted) {
-      // 시간 입력 다이얼로그 (타이핑 방식)
+      // 시간 입력 다이얼로그 (타이핑 방식 + 자동 포커스 이동)
       final hourController = TextEditingController();
       final minuteController = TextEditingController();
+      final hourFocus = FocusNode();
+      final minuteFocus = FocusNode();
       
       final result = await showDialog<Map<String, int>>(
         context: context,
@@ -119,6 +121,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   Expanded(
                     child: TextField(
                       controller: hourController,
+                      focusNode: hourFocus,
                       decoration: const InputDecoration(
                         labelText: '시',
                         hintText: '14',
@@ -127,12 +130,19 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       keyboardType: TextInputType.number,
                       maxLength: 2,
                       autofocus: true,
+                      onChanged: (value) {
+                        // 2글자 입력되면 자동으로 분 입력으로 이동
+                        if (value.length == 2) {
+                          minuteFocus.requestFocus();
+                        }
+                      },
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextField(
                       controller: minuteController,
+                      focusNode: minuteFocus,
                       decoration: const InputDecoration(
                         labelText: '분',
                         hintText: '00',
@@ -213,20 +223,28 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
       if (_isEditMode) {
         // 수정 모드: 기존 아이템 업데이트
-        final updatedItem = widget.editItem!.copyWith(
+        // CRITICAL: copyWith에서 null 값을 명시적으로 전달하기 위해 직접 생성
+        final updatedItem = ItemModel(
+          id: widget.editItem!.id,
+          userId: widget.editItem!.userId,
           url: _urlController.text,
           title: _titleController.text,
           thumbnailUrl: _thumbnailUrl,
           deadline: _deadline!,
           size: _sizeController.text.isEmpty ? null : _sizeController.text,
           memo: _memoController.text.isEmpty ? null : _memoController.text,
+          isFavorite: widget.editItem!.isFavorite,
           isPurchased: _isPurchased,
           purchasePrice: _priceController.text.isEmpty
               ? null
               : int.tryParse(_priceController.text.replaceAll(',', '')),
           shippingGroupId: _selectedShippingGroup,
           isPublic: _isPublic,
+          tags: widget.editItem!.tags,
           instantPurchase: _instantPurchase,
+          likeCount: widget.editItem!.likeCount,
+          bookmarkCount: widget.editItem!.bookmarkCount,
+          createdAt: widget.editItem!.createdAt,
           updatedAt: DateTime.now(),
         );
 

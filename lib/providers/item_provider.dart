@@ -192,8 +192,29 @@ class ItemProvider with ChangeNotifier {
     await addToMyList(sourceItem, userId);
   }
 
-  // 그룹 업데이트 (나중에 구현)
+  // 그룹 업데이트 (통계 갱신)
   Future<void> updateShippingGroup(String groupId) async {
-    // TODO: 구현
+    // 그룹에 속한 아이템들의 통계 재계산
+    final items = await FirebaseService.itemsCollection
+        .where('shippingGroupId', isEqualTo: groupId)
+        .get();
+
+    int totalPrice = 0;
+    for (final doc in items.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final price = data['purchasePrice'] as int?;
+      if (price != null) {
+        totalPrice += price;
+      }
+    }
+
+    await FirebaseService.shippingGroupsCollection.doc(groupId).update({
+      'itemCount': items.docs.length,
+      'totalPrice': totalPrice,
+      'itemIds': items.docs.map((doc) => doc.id).toList(),
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
+    
+    notifyListeners();
   }
 }

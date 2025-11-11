@@ -231,16 +231,17 @@ class ProfileScreen extends StatelessWidget {
 
     for (final item in purchasedItems) {
       final price = (item.purchasePrice ?? 0) as int;
-      final createdDate = DateTime(
-        item.createdAt.year,
-        item.createdAt.month,
+      // updatedAt 기준으로 월별 통계 (구매완료 버튼 누른 시점)
+      final purchaseDate = DateTime(
+        item.updatedAt.year,
+        item.updatedAt.month,
       );
 
-      if (createdDate == currentMonth) {
+      if (purchaseDate == currentMonth) {
         currentMonthSpending += price;
-      } else if (createdDate == lastMonth) {
+      } else if (purchaseDate == lastMonth) {
         lastMonthSpending += price;
-      } else if (createdDate == twoMonthsAgo) {
+      } else if (purchaseDate == twoMonthsAgo) {
         twoMonthsAgoSpending += price;
       }
     }

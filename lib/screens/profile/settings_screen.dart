@@ -372,11 +372,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle: const Text('즐겨찾기한 아이템의 마감일이 다가오면 알려드립니다'),
                     value: _notificationsEnabled,
                     onChanged: (value) async {
+                      // BuildContext를 미리 저장
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
+                      
                       setState(() => _notificationsEnabled = value);
                       await _saveNotificationSettings();
                       
-                      if (value) {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                      if (value && mounted) {
+                        scaffoldMessenger.showSnackBar(
                           const SnackBar(
                             content: Text('알림이 활성화되었습니다'),
                             backgroundColor: Colors.green,

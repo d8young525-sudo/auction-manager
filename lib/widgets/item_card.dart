@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import '../models/item_model.dart';
 import '../providers/item_provider.dart';
-import '../screens/home/item_detail_screen.dart';
 import '../screens/add/add_item_screen.dart';
 
 class ItemCard extends StatelessWidget {

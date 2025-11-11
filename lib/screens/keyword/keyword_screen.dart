@@ -155,12 +155,7 @@ class _KeywordScreenState extends State<KeywordScreen> {
     }
   }
 
-  Future<void> _toggleNotification(KeywordModel keyword) async {
-    final updated = keyword.copyWith(
-      notificationEnabled: !keyword.notificationEnabled,
-    );
-    await FirebaseService.updateKeyword(updated);
-  }
+
 
   @override
   Widget build(BuildContext context) {

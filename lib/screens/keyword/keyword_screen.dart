@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../models/keyword_model.dart';
 import '../../providers/user_provider.dart';
 import '../../services/firebase_service.dart';
+import '../../services/translation_service.dart';
 
 class KeywordScreen extends StatefulWidget {
   const KeywordScreen({super.key});
@@ -26,89 +27,7 @@ class _KeywordScreenState extends State<KeywordScreen> {
     super.dispose();
   }
 
-  // 간단한 일본어-한국어 번역 맵 (상용 키워드 위주)
-  final Map<String, String> _translationMap = {
-    // 의류 관련
-    'シャツ': '셔츠',
-    'パンツ': '바지',
-    'スカート': '스커트',
-    'ジャケット': '재킷',
-    'コート': '코트',
-    'セーター': '스웨터',
-    'ニット': '니트',
-    'ワンピース': '원피스',
-    'ドレス': '드레스',
-    'スーツ': '슈트',
-    'ジーンズ': '청바지',
-    'Tシャツ': '티셔츠',
-    
-    // 신발/가방
-    'スニーカー': '운동화',
-    'ブーツ': '부츠',
-    'サンダル': '샌들',
-    'バッグ': '가방',
-    'リュック': '백팩',
-    '靴': '신발',
-    
-    // 액세서리
-    '時計': '시계',
-    '財布': '지갑',
-    'ネックレス': '목걸이',
-    'ピアス': '귀걸이',
-    'イヤリング': '귀걸이',
-    '指輪': '반지',
-    'ブレスレット': '팔찌',
-    
-    // 브랜드/스타일
-    'ヴィンテージ': '빈티지',
-    'レトロ': '레트로',
-    'モダン': '모던',
-    'カジュアル': '캐주얼',
-    'フォーマル': '정장',
-    'スポーツ': '스포츠',
-    
-    // 색상
-    '黒': '검정',
-    '白': '흰색',
-    '赤': '빨강',
-    '青': '파랑',
-    '緑': '초록',
-    '黄': '노랑',
-    'ピンク': '핑크',
-    'グレー': '회색',
-    'ベージュ': '베이지',
-    'ブラウン': '갈색',
-    
-    // 상태/조건
-    '新品': '새상품',
-    '未使用': '미사용',
-    '中古': '중고',
-    '美品': '미품',
-    'ダメージ': '손상',
-    
-    // 기타
-    'セール': '세일',
-    '限定': '한정',
-    'コラボ': '콜라보',
-    'レア': '희귀',
-    '希少': '희소',
-  };
 
-  String _translateKeyword(String keyword) {
-    // 정확한 매치 확인
-    if (_translationMap.containsKey(keyword)) {
-      return _translationMap[keyword]!;
-    }
-    
-    // 부분 매치 확인 (포함 관계)
-    for (final entry in _translationMap.entries) {
-      if (keyword.contains(entry.key)) {
-        return keyword.replaceAll(entry.key, entry.value);
-      }
-    }
-    
-    return keyword; // 번역 불가시 원문 그대로
-  }
 
   Future<void> _addKeywords() async {
     final userProvider = context.read<UserProvider>();
@@ -117,10 +36,7 @@ class _KeywordScreenState extends State<KeywordScreen> {
 
     final result = await showDialog<List<Map<String, String>>>(
       context: context,
-      builder: (context) => _AddKeywordsDialog(
-        translationMap: _translationMap,
-        translateFunction: _translateKeyword,
-      ),
+      builder: (context) => const _AddKeywordsDialog(),
     );
 
     if (result != null && result.isNotEmpty) {
@@ -195,7 +111,7 @@ class _KeywordScreenState extends State<KeywordScreen> {
           // 검색 필터링 (한국어 번역 기준)
           final filteredKeywords = keywords.where((keyword) {
             if (_searchQuery.isEmpty) return true;
-            final translation = keyword.translation ?? _translateKeyword(keyword.keyword);
+            final translation = keyword.translation ?? keyword.keyword;
             return translation.toLowerCase().contains(_searchQuery.toLowerCase());
           }).toList();
 
@@ -443,13 +359,7 @@ class _KeywordScreenState extends State<KeywordScreen> {
 
 // 키워드 추가 다이얼로그
 class _AddKeywordsDialog extends StatefulWidget {
-  final Map<String, String> translationMap;
-  final String Function(String) translateFunction;
-
-  const _AddKeywordsDialog({
-    required this.translationMap,
-    required this.translateFunction,
-  });
+  const _AddKeywordsDialog();
 
   @override
   State<_AddKeywordsDialog> createState() => _AddKeywordsDialogState();
@@ -458,6 +368,7 @@ class _AddKeywordsDialog extends StatefulWidget {
 class _AddKeywordsDialogState extends State<_AddKeywordsDialog> {
   final _textController = TextEditingController();
   final List<Map<String, String>> _extractedKeywords = [];
+  bool _isTranslating = false;
 
   @override
   void dispose() {
@@ -465,26 +376,41 @@ class _AddKeywordsDialogState extends State<_AddKeywordsDialog> {
     super.dispose();
   }
 
-  void _extractKeywords() {
+  Future<void> _extractKeywords() async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
     setState(() {
+      _isTranslating = true;
       _extractedKeywords.clear();
+    });
 
+    try {
       // 공백, 쉼표, 줄바꿈으로 분리
       final words = text
           .split(RegExp(r'[\s,、\n]+'))
           .where((word) => word.isNotEmpty)
-          .toSet(); // 중복 제거
+          .toSet() // 중복 제거
+          .toList();
 
-      for (final word in words) {
-        _extractedKeywords.add({
-          'original': word,
-          'translation': widget.translateFunction(word),
-        });
+      // Google Translate API로 일괄 번역
+      final translated = await TranslationService.translateMultiple(words);
+
+      setState(() {
+        _extractedKeywords.addAll(translated);
+        _isTranslating = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isTranslating = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('번역 중 오류가 발생했습니다: $e')),
+        );
       }
-    });
+    }
   }
 
   @override
@@ -524,7 +450,8 @@ class _AddKeywordsDialogState extends State<_AddKeywordsDialog> {
                   Text(
                     '• 여러 키워드를 한번에 붙여넣으세요\n'
                     '• 자동으로 단어별로 분리됩니다\n'
-                    '• 일본어는 자동 번역됩니다',
+                    '• Google AI 번역으로 모든 일본어 번역 가능\n'
+                    '• 번역된 결과는 자동 저장됩니다',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.blue.shade900,
@@ -561,9 +488,15 @@ class _AddKeywordsDialogState extends State<_AddKeywordsDialog> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _extractKeywords,
-                icon: const Icon(Icons.auto_awesome),
-                label: const Text('키워드 자동 추출'),
+                onPressed: _isTranslating ? null : _extractKeywords,
+                icon: _isTranslating
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.auto_awesome),
+                label: Text(_isTranslating ? '번역 중...' : '키워드 자동 추출 (AI 번역)'),
               ),
             ),
             const SizedBox(height: 16),

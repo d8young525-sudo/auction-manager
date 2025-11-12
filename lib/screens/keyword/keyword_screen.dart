@@ -285,6 +285,75 @@ class _KeywordScreenState extends State<KeywordScreen> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // 편집 버튼 (번역본만 수정)
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.green),
+                            tooltip: '번역 수정',
+                            onPressed: () async {
+                              final controller = TextEditingController(
+                                text: keyword.translation ?? keyword.keyword,
+                              );
+                              
+                              final newTranslation = await showDialog<String>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('번역 수정'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '원문: ${keyword.keyword}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      TextField(
+                                        controller: controller,
+                                        decoration: const InputDecoration(
+                                          labelText: '한국어 번역',
+                                          hintText: '번역을 입력하세요',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                        autofocus: true,
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('취소'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        if (controller.text.isNotEmpty) {
+                                          Navigator.pop(context, controller.text);
+                                        }
+                                      },
+                                      child: const Text('저장'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              
+                              if (newTranslation != null && newTranslation.isNotEmpty) {
+                                final updated = keyword.copyWith(
+                                  translation: newTranslation,
+                                );
+                                await FirebaseService.updateKeyword(updated);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('번역이 수정되었습니다'),
+                                      duration: Duration(seconds: 1),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                          ),
                           // 복사 버튼
                           IconButton(
                             icon: const Icon(Icons.copy, color: Colors.blue),
